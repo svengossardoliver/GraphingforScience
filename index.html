@@ -1,0 +1,2111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strothoff Graphical Laboratories</title>
+<meta name="author" content="Christopher B. Slough">
+<meta name="description" content="Graphing and data processing for IB Group 4 sciences: uncertainties, best-fit models, rigorous max/min lines, linearisation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231d1b18'/%3E%3Cpath d='M6 25 L26 8' stroke='%23d9733f' stroke-width='3'/%3E%3Ccircle cx='10' cy='20' r='2.6' fill='%23f4f1ea'/%3E%3Ccircle cx='17' cy='15.5' r='2.6' fill='%23f4f1ea'/%3E%3Ccircle cx='23' cy='10' r='2.6' fill='%23f4f1ea'/%3E%3C/svg%3E">
+<style>:root{
+  --paper:#f3efe6; --panel:#fbf9f4; --ink:#1d1b18; --ink2:#4a453e; --muted:#7a7268; --line:#ddd6c8; --line2:#e9e3d7;
+  --rust:#b4532a; --rust-soft:#f3e2d8; --teal:#2f6f73; --bad:#a8321a; --bad-soft:#fbe4dd; --ok:#2f6f4a;
+  --input:#ffffff; --focus:#b4532a55; --shadow:0 1px 0 #00000008, 0 6px 18px -10px #3a2a1a40;
+  --sans:'IBM Plex Sans', system-ui, sans-serif; --mono:'IBM Plex Mono', ui-monospace, monospace; --serif:'IBM Plex Serif', Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#171513; --panel:#1f1c19; --ink:#ece6da; --ink2:#c9c1b3; --muted:#958c7e; --line:#38332c; --line2:#2b2722;
+    --rust:#e07a4b; --rust-soft:#3a251b; --teal:#6fb3b6; --bad:#f08a6f; --bad-soft:#3d1f17; --ok:#7cc29a;
+    --input:#14120f; --focus:#e07a4b55; --shadow:0 1px 0 #0003, 0 8px 20px -12px #000c; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#171513; --panel:#1f1c19; --ink:#ece6da; --ink2:#c9c1b3; --muted:#958c7e; --line:#38332c; --line2:#2b2722;
+  --rust:#e07a4b; --rust-soft:#3a251b; --teal:#6fb3b6; --bad:#f08a6f; --bad-soft:#3d1f17; --ok:#7cc29a;
+  --input:#14120f; --focus:#e07a4b55; --shadow:0 1px 0 #0003, 0 8px 20px -12px #000c; color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(#0000000a 1px, transparent 1px);background-size:22px 22px}
+button,input,select{font:inherit;color:inherit}
+h1,h2,h3{margin:0}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 24px;border-bottom:2px solid var(--ink);background:var(--panel)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand .mark{width:38px;height:38px;color:var(--rust);fill:var(--ink)}
+.brand h1{font:600 22px/1 var(--serif);letter-spacing:.01em}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+.file{display:flex;gap:6px;flex-wrap:wrap}
+
+/* buttons */
+button{cursor:pointer;border:1px solid var(--line);background:var(--input);border-radius:6px;padding:7px 12px;transition:background .12s,border-color .12s}
+button:hover{border-color:var(--ink2)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+button.ghost{background:transparent}
+button.accent{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button.accent:hover{background:var(--rust);border-color:var(--rust)}
+button.sm{padding:4px 10px;font-size:13px}
+button.wide{width:100%;margin-top:4px}
+
+/* layout */
+.layout{display:grid;gap:16px;padding:16px 24px;grid-template-columns:minmax(360px,410px) minmax(0,1fr) minmax(290px,330px);align-items:start}
+@media (max-width:1400px){ .layout{grid-template-columns:minmax(360px,410px) minmax(0,1fr)} .data-panel{grid-row:span 2} .analysis-panel{grid-column:2} .graph-panel{position:static} }
+@media (max-width:980px){ .data-panel{grid-row:auto} }
+@media (max-width:980px){ .layout{grid-template-columns:minmax(0,1fr);padding:12px} .analysis-panel{grid-column:auto} .top{padding:12px} }
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow);min-width:0}
+.panel h2{font:600 13px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.panel h2::before{content:"";width:14px;height:2px;background:var(--rust)}
+.graph-panel{position:sticky;top:12px}
+@media (max-width:980px){ .graph-panel{position:static} }
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field>span{font-size:11.5px;color:var(--muted);letter-spacing:.03em}
+.field input,.field select,.manual input{background:var(--input);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0;width:100%}
+.field.inline{flex-direction:row;align-items:center;gap:8px}
+.field.inline>span{white-space:nowrap;font-size:12.5px;color:var(--ink2)}
+.field.inline input{max-width:140px}
+.data-panel>.field{margin-bottom:12px}
+.qcard{border:1px solid var(--line2);border-left:3px solid var(--ink);border-radius:8px;padding:10px 10px 8px;margin-bottom:10px;background:var(--paper)}
+.qcard[data-axis="y"]{border-left-color:var(--rust)}
+.qhead{display:flex;gap:8px;align-items:baseline;margin-bottom:6px}
+.qhead b{font:600 13px var(--sans)}
+.qhead span{font-size:12px;color:var(--muted)}
+.qgrid{display:grid;grid-template-columns:1.6fr .8fr .8fr;gap:8px}
+.qgrid.unc{grid-template-columns:1fr 1fr 1fr;margin-top:6px}
+.checks{display:flex;gap:16px;flex-wrap:wrap;margin:4px 0 12px;font-size:13px}
+.checks label,.tog{display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.checks i{font-style:normal;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);font-size:10.5px;color:var(--muted);cursor:help}
+input[type=checkbox],input[type=radio]{accent-color:var(--rust);width:15px;height:15px;margin:0}
+
+/* tabs + table */
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs button{border:none;background:none;border-radius:6px 6px 0 0;padding:7px 12px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--rust);font-weight:600}
+.table-host{overflow:auto;max-height:440px;border:1px solid var(--line);border-top:none;border-radius:0 0 8px 8px;background:var(--input)}
+table.dt{border-collapse:collapse;width:100%;font-size:13px}
+table.dt th{position:sticky;top:0;background:var(--panel);font-weight:600;font-size:12px;padding:6px 6px;border-bottom:1px solid var(--line);text-align:center;line-height:1.3;z-index:1}
+table.dt thead tr:nth-child(2) th{top:var(--h1,44px);font-weight:500;color:var(--ink2)}
+table.dt th .unc{display:block;font-weight:400;color:var(--muted)}
+table.dt td{border-bottom:1px solid var(--line2);padding:0;text-align:center}
+table.dt td.idx{color:var(--muted);font:12px var(--mono);width:28px}
+table.dt input{width:100%;min-width:56px;border:none;background:transparent;padding:6px 6px;text-align:center;font:13px var(--mono)}
+table.dt input:focus{outline:none;background:var(--rust-soft)}
+table.dt input.bad{background:var(--bad-soft);color:var(--bad);box-shadow:inset 0 -2px 0 var(--bad)}
+table.dt input.warn{box-shadow:inset 0 -2px 0 #d9a03f}
+table.dt tr.ex input{color:var(--muted);text-decoration:line-through}
+table.dt td.tools{white-space:nowrap;width:52px;padding:0 4px}
+table.dt td.tools button{border:none;background:none;padding:2px 4px;color:var(--muted);font-size:13px}
+table.dt td.tools button:hover{color:var(--rust)}
+table.dt tr.ex td.tools .exb{color:var(--rust)}
+table.pt td{padding:6px 8px;font:13px var(--mono)}
+table.pt tr.ex td{color:var(--muted)}
+.row-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.hint{font-size:12px;color:var(--muted)}
+.issues{list-style:none;margin:10px 0 0;padding:0;font-size:12.5px}
+.issues li{padding:6px 10px;border-left:3px solid var(--bad);background:var(--bad-soft);color:var(--ink);margin-bottom:4px;border-radius:0 6px 6px 0}
+.issues li.info{border-left-color:#d9a03f;background:transparent}
+.issues li code{font-family:var(--mono)}
+.export-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.export-row .lbl{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+
+/* graph */
+.toolbar{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:13px}
+.toolbar .field.inline select{width:auto;max-width:230px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:6px 11px;background:var(--input);font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.tog.disabled{opacity:.45;cursor:not-allowed}
+.graph-wrap{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.graph-host svg{display:block;width:100%;height:auto;user-select:none}
+.graph-host[data-tool="tangent"] svg{cursor:crosshair}
+.graph-host.near svg{cursor:pointer}
+.tip{position:absolute;pointer-events:none;background:#1d1b18;color:#f3efe6;font:12px var(--mono);padding:5px 8px;border-radius:5px;white-space:nowrap;transform:translate(-50%,-130%);z-index:3}
+.tip sup{font-size:.75em}
+.display{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.display summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--ink2)}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+fieldset{border:1px solid var(--line2);border-radius:8px;padding:8px 12px 12px;margin:0;display:flex;flex-direction:column;gap:8px}
+legend{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0 4px}
+.radio{display:inline-flex;align-items:center;gap:6px;margin-right:12px;font-size:13px;cursor:pointer}
+.manual{display:grid;grid-template-columns:18px 1fr 1fr 1fr;gap:4px 6px;align-items:center;font-size:12px;color:var(--muted)}
+.manual input{padding:4px 6px;font:12.5px var(--mono)}
+.manual.off{opacity:.45;pointer-events:none}
+
+/* analysis */
+.card{border-top:1px solid var(--line);padding:12px 0}
+.card:first-of-type{border-top:none;padding-top:0}
+.card h3{font:600 14px var(--serif);margin-bottom:8px}
+.card .field{margin:6px 0}
+.eq{font:15px var(--serif);background:var(--paper);border:1px solid var(--line2);border-left:3px solid var(--rust);padding:8px 10px;border-radius:0 6px 6px 0;overflow-wrap:anywhere;margin-bottom:6px}
+.eq.mm{border-left-color:var(--teal);font-size:13.5px}
+.res{margin:4px 0;font-size:13.5px}
+.res b{font-weight:600}
+.res .v{font-family:var(--mono);font-size:13px}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0}
+.warn{font-size:12.5px;color:var(--bad);margin:6px 0}
+.out{font-size:13.5px;margin:4px 0}
+.out:empty{display:none}
+.pill{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:10px;border:1px solid currentColor;margin-left:4px}
+.pill.ok{color:var(--ok)} .pill.no{color:var(--bad)}
+sup,sub{font-size:.72em;line-height:0}
+
+/* footer, dialog, toast */
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 24px 24px;color:var(--muted);font-size:12px}
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);padding:20px;max-width:560px;width:calc(100% - 32px);box-shadow:0 20px 50px -20px #0008}
+dialog::backdrop{background:#1d1b1866}
+dialog h3{font:600 17px var(--serif);margin-bottom:6px}
+dialog p{color:var(--ink2);margin:0 0 12px}
+dialog input{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px;font:12px var(--mono);background:var(--input)}
+.dlg-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:520px){ .qgrid{grid-template-columns:1fr 1fr} .qgrid .field:first-child{grid-column:1/-1} .file button{padding:6px 9px} }
+@media print{ .top,.foot,.data-panel,.analysis-panel,.toolbar,.export-row,.display{display:none} .layout{display:block;padding:0} .panel{border:none;box-shadow:none} body{background:#fff} }
+
+/* help sheet */
+dialog.help{max-width:760px;padding:0;display:flex;flex-direction:column;max-height:88vh}
+dialog.help:not([open]){display:none}
+.help-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px 12px;border-bottom:2px solid var(--ink)}
+.help-head h3{font:600 20px var(--serif);margin:0}
+.help-head p{margin:2px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.help-body{overflow:auto;padding:6px 22px 10px;columns:2;column-gap:28px}
+@media (max-width:700px){ .help-body{columns:1} }
+.help-body section{padding:10px 0;border-bottom:1px solid var(--line2);break-inside:avoid;display:inline-block;width:100%}
+.help-body h4{font:600 14px var(--serif);margin:0 0 6px;color:var(--rust)}
+.help-body p,.help-body li{font-size:13px;color:var(--ink2);margin:0 0 6px}
+.help-body ol,.help-body ul{margin:0;padding-left:18px}
+.help-t{border-collapse:collapse;font-size:13px;margin-bottom:6px}
+.help-t td{padding:2px 12px 2px 0;color:var(--ink2)}
+.help-t td:first-child{font-weight:600;color:var(--ink)}
+.help-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 22px;border-top:1px solid var(--line)}
+.help-credit{margin:0;padding:0 22px 16px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M5 26 L27 7" stroke="currentColor" stroke-width="2.6"/><circle cx="10" cy="21" r="2.6"/><circle cx="17" cy="15" r="2.6"/><circle cx="23" cy="10.5" r="2.6"/><path d="M17 10v10M14 15h6" stroke="currentColor" stroke-width="1.4"/></svg>
+    <div><h1>Strothoff Graphical Laboratories</h1><p>Data processing for IB Group 4 science</p></div>
+  </div>
+  <nav class="file">
+    <button id="btnHelp" class="ghost" title="How to use this program">? Help</button>
+    <button id="btnNew" class="ghost">New</button>
+    <button id="btnExample" class="ghost">Example</button>
+    <button id="btnOpen" class="ghost">Open…</button>
+    <button id="btnSave" class="ghost">Save file</button>
+    <button id="btnShare" class="accent">Share link</button>
+    <input type="file" id="fileOpen" accept=".json,application/json" hidden>
+  </nav>
+</header>
+
+<main class="layout">
+  <!-- DATA -->
+  <section class="panel data-panel" aria-label="Data">
+    <h2>Data</h2>
+    <label class="field"><span>Graph title</span><input id="title" placeholder="e.g. Period of a simple pendulum against length"></label>
+
+    <div class="qcard" data-axis="x">
+      <div class="qhead"><b>x-axis</b><span>independent variable</span></div>
+      <div class="qgrid">
+        <label class="field"><span>Quantity</span><input data-q="name" placeholder="Length"></label>
+        <label class="field sm"><span>Symbol</span><input data-q="sym" placeholder="L"></label>
+        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="m"></label>
+      </div>
+      <div class="qgrid unc">
+        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="0.002" inputmode="decimal"></label>
+        <label class="field"><span>as</span><select data-q="mode"><option value="abs">absolute</option><option value="pct">percent</option></select></label>
+      </div>
+    </div>
+
+    <div class="qcard" data-axis="y">
+      <div class="qhead"><b>y-axis</b><span>dependent variable</span></div>
+      <div class="qgrid">
+        <label class="field"><span>Quantity</span><input data-q="name" placeholder="Period"></label>
+        <label class="field sm"><span>Symbol</span><input data-q="sym" placeholder="T"></label>
+        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="s"></label>
+      </div>
+      <div class="qgrid unc">
+        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="0.01" inputmode="decimal"></label>
+        <label class="field"><span>as</span><select data-q="mode"><option value="abs">absolute</option><option value="pct">percent</option></select></label>
+        <label class="field"><span>Trials</span><select id="trials"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+      </div>
+    </div>
+
+    <div class="checks">
+      <label><input type="checkbox" id="strict"> Strict precision <i title="Values must be written to the same decimal place as their uncertainty, e.g. 1.00 not 1, when the uncertainty is ±0.01. The graph will not plot until every cell is consistent.">?</i></label>
+      <label><input type="checkbox" id="perPoint"> Per-point uncertainties</label>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="raw" class="on">Raw data</button>
+      <button role="tab" data-tab="processed">Processed data</button>
+    </div>
+    <div id="tableHost" class="table-host"></div>
+    <div class="row-actions" id="rawActions">
+      <button id="btnAddRow" class="ghost sm">+ Add row</button>
+      <button id="btnClearData" class="ghost sm">Clear data</button>
+      <span class="hint">Paste columns straight from a spreadsheet. Enter moves down.</span>
+    </div>
+    <ul id="issues" class="issues"></ul>
+    <div class="export-row">
+      <span class="lbl">Table</span>
+      <button id="btnCopyTable" class="sm">Copy</button>
+      <button id="btnTablePNG" class="sm">PNG</button>
+      <button id="btnTableCSV" class="sm">CSV</button>
+    </div>
+  </section>
+
+  <!-- GRAPH -->
+  <section class="panel graph-panel" aria-label="Graph">
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Click tool">
+        <button data-tool="exclude" class="on" title="Click a point to exclude it from the fit (click again to include it)">Exclude points</button>
+        <button data-tool="tangent" title="Click the graph to draw a tangent to the best-fit curve">Tangent</button>
+      </div>
+      <label class="field inline"><span>Fit</span>
+        <select id="fit">
+          <option value="none">None</option>
+          <option value="linear">Linear · y = mx + c</option>
+          <option value="proportional">Proportional · y = kx</option>
+          <option value="quadratic">Quadratic · y = ax² + bx + c</option>
+          <option value="power">Power · y = axⁿ</option>
+          <option value="exponential">Exponential · y = Aeᵏˣ</option>
+          <option value="log">Logarithmic · y = a ln x + b</option>
+        </select>
+      </label>
+      <label class="field inline"><span>Plot x as</span><select id="linX"></select></label>
+      <label class="field inline"><span>Plot y as</span><select id="linY"></select></label>
+      <label class="tog"><input type="checkbox" id="maxmin"> Max/min lines</label>
+      <label class="tog"><input type="checkbox" id="residuals"> Residuals</label>
+    </div>
+    <div class="graph-wrap">
+      <div id="graphHost" class="graph-host" data-tool="exclude"></div>
+      <div id="tip" class="tip" hidden></div>
+    </div>
+    <div class="export-row">
+      <span class="lbl">Graph</span>
+      <button id="btnPNG" class="sm">Download PNG</button>
+      <button id="btnCopyImg" class="sm">Copy image</button>
+      <button id="btnSVG" class="sm">Download SVG</button>
+      <span id="toolHint" class="hint"></span>
+    </div>
+    <details class="display" id="displayBox">
+      <summary>Axes &amp; display</summary>
+      <div class="dgrid">
+        <fieldset>
+          <legend>Axis scale</legend>
+          <label class="radio"><input type="radio" name="scale" value="auto" checked> Automatic</label>
+          <label class="radio"><input type="radio" name="scale" value="manual"> Manual</label>
+          <label class="tog"><input type="checkbox" id="origin"> Include the origin</label>
+          <div class="manual">
+            <span></span><span>min</span><span>max</span><span>step</span>
+            <b>x</b><input data-ax="xmin"><input data-ax="xmax"><input data-ax="xstep" placeholder="auto">
+            <b>y</b><input data-ax="ymin"><input data-ax="ymax"><input data-ax="ystep" placeholder="auto">
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Graph</legend>
+          <label class="field"><span>Gridlines</span><select id="grid"><option value="minor">Major and minor</option><option value="major">Major only</option><option value="none">None</option></select></label>
+          <label class="field"><span>Equation box</span><select id="box"><option value="auto">Auto position</option><option value="tl">Top left</option><option value="tr">Top right</option><option value="bl">Bottom left</option><option value="br">Bottom right</option><option value="off">Hidden</option></select></label>
+          <label class="tog"><input type="checkbox" id="showTitle"> Title on graph</label>
+        </fieldset>
+        <fieldset>
+          <legend>Precision</legend>
+          <label class="field"><span>Significant figures</span><select id="sf"><option value="auto">Match the data</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+          <label class="field"><span>Uncertainties quoted to</span><select id="sfU"><option value="1">1 s.f.</option><option value="2">2 s.f.</option></select></label>
+        </fieldset>
+      </div>
+    </details>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section class="panel analysis-panel" aria-label="Analysis">
+    <h2>Analysis</h2>
+    <div class="card"><h3>Best fit</h3><div id="fitOut"></div></div>
+    <div class="card">
+      <h3>Tangent</h3>
+      <label class="field inline"><span id="tanLbl">at x =</span><input id="tanX" inputmode="decimal" placeholder="value"></label>
+      <div id="tanOut" class="out"></div>
+    </div>
+    <div class="card">
+      <h3>Readouts</h3>
+      <div id="intOut" class="out"></div>
+      <label class="field inline"><span id="ixLbl">y at x =</span><input id="interpX" inputmode="decimal"></label>
+      <div id="ixOut" class="out"></div>
+      <label class="field inline"><span id="iyLbl">x at y =</span><input id="interpY" inputmode="decimal"></label>
+      <div id="iyOut" class="out"></div>
+    </div>
+    <div class="card">
+      <h3>Compare with a literature value</h3>
+      <label class="field"><span>Compare</span><select id="litQty"></select></label>
+      <label class="field inline"><span>Literature value</span><input id="litVal" inputmode="decimal"></label>
+      <div id="litOut" class="out"></div>
+    </div>
+    <button id="btnCopyResults" class="wide">Copy results as text</button>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Created by Christopher B. Slough, Head of Science, Strothoff International School · © 2026 Christopher B. Slough</span>
+  <span>Fits by least squares; max/min lines are the steepest and shallowest straight lines through every error bar.</span>
+</footer>
+
+<dialog id="shareDlg">
+  <form method="dialog">
+    <h3>Share this graph</h3>
+    <p>Anyone with this link opens the same data, settings and fit. Nothing is stored on a server: the whole graph lives in the link.</p>
+    <input id="shareUrl" readonly>
+    <div class="dlg-actions"><button type="button" id="btnCopyLink" class="accent">Copy link</button><button value="close" class="ghost">Close</button></div>
+  </form>
+</dialog>
+<dialog id="helpDlg" class="help" aria-labelledby="helpTitle">
+  <div class="help-head">
+    <div><h3 id="helpTitle">Strothoff Graphical Laboratories</h3><p>How to use this program</p></div>
+    <button type="button" class="ghost sm" id="btnHelpX" aria-label="Close">✕</button>
+  </div>
+  <div class="help-body">
+    <section>
+      <h4>Quick start</h4>
+      <ol>
+        <li>Fill in the <b>x-axis</b> and <b>y-axis</b> cards: quantity, symbol, unit and uncertainty.</li>
+        <li>Type your measurements into the table. If you repeated the measurement, set <b>Trials</b> first.</li>
+        <li>Choose a <b>Fit</b> above the graph. The equation and R² appear on the graph and under <b>Analysis</b>.</li>
+        <li>Export the graph and the tables for your report.</li>
+      </ol>
+      <p>Press <b>Example</b> at any time to see a finished pendulum experiment.</p>
+    </section>
+    <section>
+      <h4>Entering data</h4>
+      <ul>
+        <li>Type values as you recorded them. <b>1.00</b> and <b>1</b> are different measurements, and the program keeps exactly what you typed.</li>
+        <li><b>Enter</b> or <b>↓</b> moves down a column. A new row appears whenever you fill the last one.</li>
+        <li>You can paste whole columns from a spreadsheet: click the first cell, then paste.</li>
+        <li><b>Uncertainty</b> can be absolute (± 0.01) or a percentage (± 2 %). Tick <b>Per-point uncertainties</b> if each row has its own value.</li>
+        <li>With several <b>trials</b>, each point is the mean. Its uncertainty is half the range of the trials, or the instrument uncertainty if that is larger.</li>
+        <li>The <b>○</b> button at the end of a row excludes that point from the fit; <b>×</b> deletes the row.</li>
+      </ul>
+    </section>
+    <section>
+      <h4>Strict precision</h4>
+      <p>When this is on, every value must be written to the same decimal place as its uncertainty. With ± 0.01 you must write 1.00, not 1 or 1.003. Problem cells turn red and the graph stays blank until they are fixed. Hover over a red cell to see what to write.</p>
+    </section>
+    <section>
+      <h4>Tables</h4>
+      <p><b>Raw data</b> shows what you typed, with headings in the form <i>Quantity symbol / unit ± uncertainty</i>. <b>Processed data</b> shows means, uncertainties and any linearised values, each rounded so the value matches its uncertainty. Use <b>Copy</b> to paste a table into Word or Google Docs, or save it as <b>PNG</b> or <b>CSV</b>.</p>
+    </section>
+    <section>
+      <h4>Fits</h4>
+      <table class="help-t">
+        <tr><td>Linear</td><td>y = mx + c</td></tr>
+        <tr><td>Proportional</td><td>y = kx (through the origin)</td></tr>
+        <tr><td>Quadratic</td><td>y = ax² + bx + c</td></tr>
+        <tr><td>Power</td><td>y = axⁿ</td></tr>
+        <tr><td>Exponential</td><td>y = Ae<sup>kx</sup></td></tr>
+        <tr><td>Logarithmic</td><td>y = a ln x + b</td></tr>
+      </table>
+      <p>All fits use least squares on the points you have not excluded. Numbers are rounded to match the significant figures of your data (change this under <b>Axes &amp; display</b>).</p>
+    </section>
+    <section>
+      <h4>Straightening a curve</h4>
+      <p>Use <b>Plot x as</b> and <b>Plot y as</b> to graph, for example, T² against L, or ln V against t. Error bars are recalculated for the new quantities. A straight line on the new graph tells you which relationship the data follow, and lets you use max/min lines.</p>
+    </section>
+    <section>
+      <h4>Max/min lines</h4>
+      <p>With a linear fit, tick <b>Max/min lines</b>. The program finds the steepest and the shallowest straight lines that pass through <i>every</i> error bar. It then reports the gradient and intercept with their uncertainties: Δm = (m<sub>max</sub> − m<sub>min</sub>) / 2. If no single line passes through all the error bars, it says so and uses the corners of the first and last error bars instead. Treat that as a sign to look again at your uncertainties or for outliers.</p>
+    </section>
+    <section>
+      <h4>Tools on the graph</h4>
+      <ul>
+        <li><b>Exclude points</b>: click a point to leave it out of the fit (it turns hollow). Click it again to bring it back.</li>
+        <li><b>Tangent</b>: click anywhere on the graph, or type an x value under Analysis, to draw the tangent to the fitted curve and read its gradient.</li>
+        <li><b>Residuals</b>: shows how far each point is from the fit. A random scatter about zero means the model suits the data; a pattern means it does not.</li>
+        <li>If the error bars are too small to see at the plotted scale, a note says so under the graph.</li>
+      </ul>
+    </section>
+    <section>
+      <h4>Analysis panel</h4>
+      <p><b>Readouts</b> give the intercepts and let you read y for a chosen x, or x for a chosen y. <b>Compare with a literature value</b> gives the percentage difference. With max/min lines, it also says whether the accepted value lies within your uncertainty range. <b>Copy results as text</b> copies everything for your report.</p>
+    </section>
+    <section>
+      <h4>Saving your work</h4>
+      <ul>
+        <li>Your work is kept in this browser automatically, so it is still there when you come back.</li>
+        <li><b>Save file</b> downloads your graph as a file that you can reopen later with <b>Open…</b>, on any computer.</li>
+        <li><b>Share link</b> makes a link that contains all your data. Send it to your teacher or a lab partner. Nothing is stored on a server.</li>
+        <li>Download the graph as <b>PNG</b> for a report, or <b>SVG</b> for the sharpest print. <b>Copy image</b> lets you paste it straight into a document.</li>
+      </ul>
+    </section>
+  </div>
+  <div class="help-foot">
+    <label class="tog"><input type="checkbox" id="helpNever"> Don’t show this when the program starts</label>
+    <button type="button" class="accent" id="btnHelpGo" autofocus>Start graphing</button>
+  </div>
+  <p class="help-credit">Created by Christopher B. Slough, Head of Science, Strothoff International School. You can open this page again at any time with <b>? Help</b>.</p>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>/* ===================================================================
+   Strothoff Graphical Laboratories — math core
+   Number parsing & precision, rounding, unit algebra, transforms,
+   fits (6 models), R², rigorous max/min lines, trial averaging.
+   =================================================================== */
+const GM = (() => {
+
+  /* ---------- number strings ---------- */
+  // Parses a number exactly as typed. Accepts "1,23" as a decimal comma.
+  // Returns {ok, value, lsd (exponent of last written digit), sf, raw}
+  function parseNum(raw) {
+    if (raw == null) return { ok: false, empty: true };
+    let s = String(raw).trim().replace(/−/g, '-').replace(/\s+/g, '');
+    if (s === '') return { ok: false, empty: true };
+    s = s.replace(/[×x]10\^?/i, 'e').replace(/\*10\^/, 'e');
+    if (s.indexOf('.') === -1 && (s.match(/,/g) || []).length === 1) s = s.replace(',', '.');
+    const m = s.match(/^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/);
+    if (!m || (m[2] === '' && (m[3] === undefined || m[3] === ''))) return { ok: false, raw };
+    const intD = m[2] || '', fracD = m[3] || '', exp = m[4] ? parseInt(m[4], 10) : 0;
+    const hasPoint = m[3] !== undefined;
+    const value = parseFloat(`${m[1]}${intD || '0'}.${fracD || '0'}e${exp}`);
+    const lsd = exp - fracD.length;
+    let digits = (intD + fracD).replace(/^0+/, '');
+    if (!hasPoint && !m[4]) digits = digits.replace(/0+$/, '');
+    let sf = digits.length;
+    if (sf === 0) sf = Math.max(1, fracD.length);
+    return { ok: true, value, lsd, sf, raw: String(raw).trim() };
+  }
+
+  const isNum = v => typeof v === 'number' && isFinite(v);
+  const pow10 = p => Number('1e' + p);
+
+  /* ---------- rounding & formatting (markup: ^{..} superscript) ---------- */
+  function sciParts(v, sf) {
+    if (v === 0) return { mant: (0).toFixed(Math.max(0, sf - 1)), exp: 0 };
+    let e = Math.floor(Math.log10(Math.abs(v)));
+    let mant = v / pow10(e);
+    let ms = mant.toFixed(Math.max(0, sf - 1));
+    if (Math.abs(parseFloat(ms)) >= 10) { e += 1; mant = v / pow10(e); ms = mant.toFixed(Math.max(0, sf - 1)); }
+    return { mant: ms, exp: e };
+  }
+  const minus = s => s.replace(/^-/, '−');
+  // Format to sf significant figures; sci notation for very large/small.
+  function fmtSF(v, sf = 3) {
+    if (!isNum(v)) return '—';
+    sf = Math.max(1, Math.min(12, sf | 0));
+    if (v === 0) return '0';
+    const e = Math.floor(Math.log10(Math.abs(v)));
+    if (e >= 5 || e <= -4) {
+      const p = sciParts(v, sf);
+      return `${minus(p.mant)}×10^{${minus(String(p.exp))}}`;
+    }
+    const p = sf - 1 - e;
+    if (p >= 0) return minus(v.toFixed(p));
+    const r = Math.round(v / pow10(-p)) * pow10(-p);
+    return minus(String(Math.round(r)));
+  }
+  // Format to a decimal place given as exponent of last digit (lsd).
+  function fmtLSD(v, lsd) {
+    if (!isNum(v)) return '—';
+    let s;
+    if (lsd < 0) s = v.toFixed(Math.min(20, -lsd));
+    else s = String(Math.round(Math.round(v / pow10(lsd)) * pow10(lsd)));
+    if (/^-[0.]*$/.test(s)) s = s.slice(1);
+    return minus(s);
+  }
+  function plainLSD(v, lsd) { return fmtLSD(v, lsd).replace(/−/g, '-'); }
+  // Round an uncertainty to sfU sig figs. Returns {u, lsd}
+  function roundUnc(u, sfU = 1) {
+    u = Math.abs(u);
+    if (!isNum(u) || u === 0) return { u: 0, lsd: null };
+    let e = Math.floor(Math.log10(u));
+    let lsd = e - sfU + 1;
+    let r = Math.round(u / pow10(lsd)) * pow10(lsd);
+    const e2 = Math.floor(Math.log10(r) + 1e-12);
+    if (e2 > e) { lsd = e2 - sfU + 1; r = Math.round(u / pow10(lsd)) * pow10(lsd); }
+    return { u: r, lsd };
+  }
+  // Value ± uncertainty, IB convention. Returns {value, unc, markup, factorExp}
+  function fmtValUnc(v, u, sfU = 1) {
+    if (!isNum(v)) return { markup: '—', value: '—', unc: '—' };
+    const ru = roundUnc(u, sfU);
+    if (ru.lsd === null) return { markup: fmtSF(v, 4), value: fmtSF(v, 4), unc: '0', exp: null };
+    const big = Math.max(Math.abs(v), ru.u);
+    const E = Math.floor(Math.log10(big));
+    if (E >= 5 || E <= -4 || ru.lsd >= 4) {
+      const vs = fmtLSD(v / pow10(E), ru.lsd - E), us = fmtLSD(ru.u / pow10(E), ru.lsd - E);
+      return { value: vs, unc: us, exp: E, markup: `(${vs} ± ${us})×10^{${minus(String(E))}}` };
+    }
+    const vs = fmtLSD(v, ru.lsd), us = fmtLSD(ru.u, ru.lsd);
+    return { value: vs, unc: us, exp: null, markup: `${vs} ± ${us}` };
+  }
+
+  /* ---------- units ---------- */
+  const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9', '⁻': '-', '⋅': '.' };
+  function parseUnit(str) {
+    const s = (str || '').trim();
+    if (s === '' || s === '-' || s === '1') return { terms: [] };
+    const parts = s.split('/');
+    const terms = [];
+    for (let pi = 0; pi < parts.length; pi++) {
+      const sign = pi === 0 ? 1 : -1;
+      const toks = parts[pi].trim().split(/[\s·*]+/).filter(Boolean);
+      if (!toks.length) return { raw: s };
+      for (const t0 of toks) {
+        let t = t0.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+$/, m => '^' + [...m].map(c => SUP[c]).join(''));
+        const m = t.match(/^([A-Za-zµμΩ°%Å]+)(?:\^\{?(-?\d+(?:\.\d+)?)\}?|(-?\d+))?$/);
+        if (!m) return { raw: s };
+        const p = parseFloat(m[2] ?? m[3] ?? '1') * sign;
+        terms.push([m[1], p]);
+      }
+    }
+    return { terms: mergeTerms(terms) };
+  }
+  function mergeTerms(terms) {
+    const out = [];
+    for (const [b, p] of terms) {
+      const f = out.find(t => t[0] === b);
+      if (f) f[1] += p; else out.push([b, p]);
+    }
+    return out.filter(t => Math.abs(t[1]) > 1e-12);
+  }
+  function unitPow(u, n) {
+    if (u.raw) return { raw: `(${u.raw})^{${n}}` };
+    return { terms: u.terms.map(([b, p]) => [b, +(p * n).toFixed(6)]) };
+  }
+  function unitMul(a, b) {
+    if (a.raw || b.raw) {
+      const fa = fmtUnit(a), fb = fmtUnit(b);
+      return { raw: [fa, fb].filter(Boolean).join(' ') };
+    }
+    return { terms: mergeTerms([...a.terms, ...b.terms]) };
+  }
+  function fmtPow(p) { return minus(String(+p.toFixed(4))); }
+  function fmtUnit(u) {
+    if (!u) return '';
+    if (u.raw) return u.raw;
+    const pos = u.terms.filter(t => t[1] > 0), neg = u.terms.filter(t => t[1] < 0);
+    return [...pos, ...neg].map(([b, p]) => p === 1 ? b : `${b}^{${fmtPow(p)}}`).join(' ');
+  }
+  const isDimless = u => u && !u.raw && u.terms.length === 0;
+
+  /* ---------- transforms (linearisation) ---------- */
+  const wrap = s => /[\s+\-−/]/.test(s.replace(/\^\{[^}]*\}|_\{[^}]*\}/g, '')) ? `(${s})` : s;
+  const TRANSFORMS = {
+    none:  { name: 'none', f: v => v, ok: () => true, sym: s => s, unit: u => u },
+    sq:    { name: 'x²', f: v => v * v, ok: () => true, sym: s => `${wrap(s)}^{2}`, unit: u => unitPow(u, 2) },
+    cube:  { name: 'x³', f: v => v * v * v, ok: () => true, sym: s => `${wrap(s)}^{3}`, unit: u => unitPow(u, 3) },
+    sqrt:  { name: '√x', f: v => Math.sqrt(v), ok: v => v >= 0, sym: s => `√${wrap(s)}`, unit: u => unitPow(u, 0.5) },
+    inv:   { name: '1/x', f: v => 1 / v, ok: v => v !== 0, sym: s => `${wrap(s)}^{−1}`, unit: u => unitPow(u, -1) },
+    inv2:  { name: '1/x²', f: v => 1 / (v * v), ok: v => v !== 0, sym: s => `${wrap(s)}^{−2}`, unit: u => unitPow(u, -2) },
+    invsqrt: { name: '1/√x', f: v => 1 / Math.sqrt(v), ok: v => v > 0, sym: s => `${wrap(s)}^{−1/2}`, unit: u => unitPow(u, -0.5) },
+    ln:    { name: 'ln x', f: v => Math.log(v), ok: v => v > 0, log: 'ln', sym: s => `ln ${s}`, unit: () => ({ terms: [] }) },
+    log10: { name: 'log₁₀ x', f: v => Math.log10(v), ok: v => v > 0, log: 'log', sym: s => `log ${s}`, unit: () => ({ terms: [] }) },
+  };
+  // Propagate an absolute uncertainty through f using the max–min method.
+  function propagate(T, v, d) {
+    if (!d) return 0;
+    const a = v + d, b = v - d;
+    const okA = T.ok(a), okB = T.ok(b);
+    if (okA && okB && (Math.sign(a) === Math.sign(b) || T === TRANSFORMS.sq || T === TRANSFORMS.cube)) {
+      if (T === TRANSFORMS.sq && b < 0 && a > 0) return Math.max(T.f(a), T.f(b)) / 2;
+      return Math.abs(T.f(a) - T.f(b)) / 2;
+    }
+    if (okA) return Math.abs(T.f(a) - T.f(v));
+    if (okB) return Math.abs(T.f(v) - T.f(b));
+    return 0;
+  }
+
+  /* ---------- small linear algebra ---------- */
+  function solve(A, b) {
+    const n = b.length, M = A.map((r, i) => [...r, b[i]]);
+    for (let c = 0; c < n; c++) {
+      let p = c;
+      for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      if (Math.abs(M[p][c]) < 1e-300) return null;
+      [M[c], M[p]] = [M[p], M[c]];
+      for (let r = 0; r < n; r++) if (r !== c) {
+        const f = M[r][c] / M[c][c];
+        for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k];
+      }
+    }
+    return M.map((r, i) => r[n] / r[i]);
+  }
+  // Least squares on basis functions (centred/scaled x for stability).
+  function linLSQ(xs, ys, basis) {
+    const k = basis.length, A = Array.from({ length: k }, () => Array(k).fill(0)), b = Array(k).fill(0);
+    for (let i = 0; i < xs.length; i++) {
+      const phi = basis.map(f => f(xs[i]));
+      for (let r = 0; r < k; r++) { b[r] += phi[r] * ys[i]; for (let c = 0; c < k; c++) A[r][c] += phi[r] * phi[c]; }
+    }
+    return solve(A, b);
+  }
+  // Levenberg–Marquardt for 2-parameter models.
+  function lm(xs, ys, f, p0) {
+    let p = p0.slice(), lambda = 1e-3;
+    const sse = q => { let s = 0; for (let i = 0; i < xs.length; i++) { const r = ys[i] - f(q, xs[i]); s += r * r; } return s; };
+    let cur = sse(p);
+    if (!isNum(cur)) return null;
+    for (let it = 0; it < 300; it++) {
+      const J = [], r = [];
+      for (let i = 0; i < xs.length; i++) {
+        const row = [];
+        for (let j = 0; j < p.length; j++) {
+          const h = 1e-7 * Math.max(1, Math.abs(p[j]));
+          const q = p.slice(); q[j] += h;
+          row.push((f(q, xs[i]) - f(p, xs[i])) / h);
+        }
+        J.push(row); r.push(ys[i] - f(p, xs[i]));
+      }
+      const n = p.length, JTJ = Array.from({ length: n }, () => Array(n).fill(0)), JTr = Array(n).fill(0);
+      for (let i = 0; i < xs.length; i++) for (let a = 0; a < n; a++) {
+        JTr[a] += J[i][a] * r[i];
+        for (let c = 0; c < n; c++) JTJ[a][c] += J[i][a] * J[i][c];
+      }
+      let improved = false;
+      for (let tries = 0; tries < 20; tries++) {
+        const A = JTJ.map((row, a) => row.map((v, c) => a === c ? v * (1 + lambda) + 1e-300 : v));
+        const d = solve(A, JTr);
+        if (!d) { lambda *= 10; continue; }
+        const q = p.map((v, j) => v + d[j]), s = sse(q);
+        if (isNum(s) && s < cur) {
+          const rel = (cur - s) / Math.max(cur, 1e-300);
+          p = q; cur = s; lambda = Math.max(lambda / 10, 1e-12); improved = true;
+          if (rel < 1e-14) return p;
+          break;
+        }
+        lambda *= 10;
+      }
+      if (!improved) break;
+    }
+    return p;
+  }
+  function r2(xs, ys, f) {
+    const n = ys.length, mean = ys.reduce((a, b) => a + b, 0) / n;
+    let ssr = 0, sst = 0;
+    for (let i = 0; i < n; i++) { const r = ys[i] - f(xs[i]); ssr += r * r; sst += (ys[i] - mean) ** 2; }
+    return sst === 0 ? null : 1 - ssr / sst;
+  }
+
+  /* ---------- the six models ---------- */
+  // eq(X, Y, P) builds the equation markup from formatted parameter strings P.
+  const sgn = s => s.startsWith('−') ? ` − ${s.slice(1)}` : ` + ${s}`;
+  const lnArg = X => /[\s^]/.test(X) || X.length > 2 ? `(${X})` : X;
+  const MODELS = {
+    linear: {
+      name: 'Linear', form: 'y = mx + c', params: ['m', 'c'], min: 2,
+      f: (p, x) => p[0] * x + p[1], df: (p) => p[0],
+      fit(xs, ys) {
+        const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+        let sxy = 0, sxx = 0;
+        for (let i = 0; i < n; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
+        if (sxx === 0) return { err: 'All x values are the same.' };
+        const m = sxy / sxx; return { p: [m, my - m * mx] };
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} ${X}${sgn(P[1])}`,
+      units: (ux, uy) => [unitMul(uy, unitPow(ux, -1)), uy],
+    },
+    proportional: {
+      name: 'Proportional', form: 'y = kx', params: ['k'], min: 1,
+      f: (p, x) => p[0] * x, df: (p) => p[0],
+      fit(xs, ys) {
+        let sxy = 0, sxx = 0;
+        for (let i = 0; i < xs.length; i++) { sxy += xs[i] * ys[i]; sxx += xs[i] * xs[i]; }
+        if (sxx === 0) return { err: 'All x values are zero.' };
+        return { p: [sxy / sxx] };
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} ${X}`,
+      units: (ux, uy) => [unitMul(uy, unitPow(ux, -1))],
+    },
+    quadratic: {
+      name: 'Quadratic', form: 'y = ax² + bx + c', params: ['a', 'b', 'c'], min: 3,
+      f: (p, x) => (p[0] * x + p[1]) * x + p[2], df: (p, x) => 2 * p[0] * x + p[1],
+      fit(xs, ys) {
+        const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n;
+        const sx = Math.max(...xs.map(x => Math.abs(x - mx))) || 1;
+        const t = xs.map(x => (x - mx) / sx);
+        const q = linLSQ(t, ys, [u => u * u, u => u, () => 1]);
+        if (!q || !q.every(isNum)) return { err: 'Not enough spread in x for a quadratic.' };
+        // y = A t² + B t + C, t = (x − mx)/sx
+        const a = q[0] / (sx * sx), b = q[1] / sx - 2 * a * mx, c = q[2] - q[1] * mx / sx + a * mx * mx;
+        return { p: [a, b, c] };
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} ${wrap(X)}^{2}${sgn(P[1])} ${X}${sgn(P[2])}`,
+      units: (ux, uy) => [unitMul(uy, unitPow(ux, -2)), unitMul(uy, unitPow(ux, -1)), uy],
+    },
+    power: {
+      name: 'Power', form: 'y = axⁿ', params: ['a', 'n'], min: 2, needXpos: true,
+      f: (p, x) => p[0] * Math.pow(x, p[1]), df: (p, x) => p[0] * p[1] * Math.pow(x, p[1] - 1),
+      fit(xs, ys) {
+        if (xs.some(x => x <= 0)) return { err: 'A power fit needs every x value to be positive.' };
+        const sgnY = ys.filter(y => y < 0).length > ys.length / 2 ? -1 : 1;
+        const ok = xs.map((x, i) => sgnY * ys[i] > 0);
+        const lx = xs.filter((_, i) => ok[i]).map(Math.log), ly = ys.filter((_, i) => ok[i]).map(y => Math.log(sgnY * y));
+        let p0 = [sgnY, 1];
+        if (lx.length >= 2) { const l = MODELS.linear.fit(lx, ly); if (l.p) p0 = [sgnY * Math.exp(l.p[1]), l.p[0]]; }
+        const p = lm(xs, ys, MODELS.power.f, p0);
+        if (!p || !p.every(isNum)) return { err: 'The power fit did not converge.' };
+        return { p };
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} ${wrap(X)}^{${P[1]}}`,
+      units: (ux, uy, p) => [unitMul(uy, unitPow(ux, -p[1])), { terms: [] }],
+    },
+    exponential: {
+      name: 'Exponential', form: 'y = Ae^{kx}', params: ['A', 'k'], min: 2,
+      f: (p, x) => p[0] * Math.exp(p[1] * x), df: (p, x) => p[0] * p[1] * Math.exp(p[1] * x),
+      fit(xs, ys) {
+        const sgnY = ys.filter(y => y < 0).length > ys.length / 2 ? -1 : 1;
+        const ok = ys.map(y => sgnY * y > 0);
+        const xx = xs.filter((_, i) => ok[i]), ly = ys.filter((_, i) => ok[i]).map(y => Math.log(sgnY * y));
+        let p0 = [sgnY, 0];
+        if (xx.length >= 2) { const l = MODELS.linear.fit(xx, ly); if (l.p) p0 = [sgnY * Math.exp(l.p[1]), l.p[0]]; }
+        const p = lm(xs, ys, MODELS.exponential.f, p0);
+        if (!p || !p.every(isNum)) return { err: 'The exponential fit did not converge.' };
+        return { p };
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} e^{${P[1]} ${X}}`,
+      units: (ux, uy) => [uy, unitPow(ux, -1)],
+    },
+    log: {
+      name: 'Logarithmic', form: 'y = a ln x + b', params: ['a', 'b'], min: 2, needXpos: true,
+      f: (p, x) => p[0] * Math.log(x) + p[1], df: (p, x) => p[0] / x,
+      fit(xs, ys) {
+        if (xs.some(x => x <= 0)) return { err: 'A logarithmic fit needs every x value to be positive.' };
+        const l = MODELS.linear.fit(xs.map(Math.log), ys);
+        return l.p ? { p: l.p } : l;
+      },
+      eq: (X, Y, P) => `${Y} = ${P[0]} ln ${lnArg(X)}${sgn(P[1])}`,
+      units: (ux, uy) => [uy, uy],
+    },
+  };
+  function fitModel(id, pts) {
+    const M = MODELS[id];
+    if (!M) return null;
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    if (pts.length < M.min) return { err: `A ${M.name.toLowerCase()} fit needs at least ${M.min} points.` };
+    if (pts.length < M.params.length + 1 && id !== 'proportional') {
+      // exact fit; still allowed but flagged
+    }
+    const r = M.fit(xs, ys);
+    if (r.err) return r;
+    const f = x => M.f(r.p, x);
+    return { id, p: r.p, f, df: x => M.df(r.p, x), r2: r2(xs, ys, f), n: pts.length, exact: pts.length <= M.params.length, needXpos: !!M.needXpos };
+  }
+
+  /* ---------- rigorous max/min lines ----------
+     A line y = mx + c passes through the error box [xl,xr]×[yl,yu] iff
+     min(m·xl, m·xr) + c ≤ yu  and  max(m·xl, m·xr) + c ≥ yl.
+     For a fixed sign of m these are linear constraints in (m, c), so the set
+     of admissible lines is a union of two convex polygons. The steepest and
+     shallowest admissible lines sit at vertices of those polygons.          */
+  function maxMinLines(pts) {
+    const P = pts.filter(p => isNum(p.x) && isNum(p.y));
+    if (P.length < 2) return { err: 'Need at least two points.' };
+    const xs = P.map(p => p.x), ys = P.map(p => p.y);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys);
+    const sx = (Math.max(...xs) - x0) || 0, sy = (Math.max(...ys) - y0) || 1;
+    if (sx === 0) return { err: 'All x values are the same.' };
+    // normalise to [0,1]
+    const B = P.map(p => ({
+      xl: (p.x - (p.dx || 0) - x0) / sx, xr: (p.x + (p.dx || 0) - x0) / sx,
+      yl: (p.y - (p.dy || 0) - y0) / sy, yu: (p.y + (p.dy || 0) - y0) / sy,
+    }));
+    const BIG = 1e5, results = [];
+    for (const sign of [1, -1]) {
+      // constraints: a*m + b*c <= r
+      const C = [];
+      for (const b of B) {
+        if (sign > 0) { C.push([b.xl, 1, b.yu]); C.push([-b.xr, -1, -b.yl]); }
+        else { C.push([b.xr, 1, b.yu]); C.push([-b.xl, -1, -b.yl]); }
+      }
+      C.push(sign > 0 ? [-1, 0, 0] : [1, 0, 0]);
+      C.push([1, 0, BIG], [-1, 0, BIG], [0, 1, BIG], [0, -1, BIG]);
+      const feas = (m, c) => C.every(([a, b, r]) => a * m + b * c <= r + 1e-9 * (1 + Math.abs(r)));
+      for (let i = 0; i < C.length; i++) for (let j = i + 1; j < C.length; j++) {
+        const [a1, b1, r1] = C[i], [a2, b2, r2_] = C[j];
+        const det = a1 * b2 - a2 * b1;
+        if (Math.abs(det) < 1e-14) continue;
+        const m = (r1 * b2 - r2_ * b1) / det, c = (a1 * r2_ - a2 * r1) / det;
+        if (feas(m, c)) results.push([m, c]);
+      }
+    }
+    const back = ([m, c]) => { const M = m * sy / sx; return { m: M, c: y0 + sy * c - M * x0 }; };
+    const pick = (best) => {
+      const tol = 1e-9 * (1 + Math.abs(best));
+      const cs = results.filter(r => Math.abs(r[0] - best) <= tol).map(r => r[1]);
+      return back([best, (Math.min(...cs) + Math.max(...cs)) / 2]);
+    };
+    if (results.length) {
+      const mMax = Math.max(...results.map(r => r[0])), mMin = Math.min(...results.map(r => r[0]));
+      if (mMax >= BIG * 0.999 || mMin <= -BIG * 0.999) return { err: 'The error bars are too large to bound the gradient.' };
+      return { method: 'rigorous', max: pick(mMax), min: pick(mMin) };
+    }
+    // Fallback: textbook method — extreme corners of first and last error bars.
+    const sorted = P.slice().sort((a, b) => a.x - b.x), f = sorted[0], l = sorted[sorted.length - 1];
+    const corners = p => [[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([i, j]) => [p.x + i * (p.dx || 0), p.y + j * (p.dy || 0)]);
+    const lines = [];
+    for (const a of corners(f)) for (const b of corners(l)) if (b[0] !== a[0]) {
+      const m = (b[1] - a[1]) / (b[0] - a[0]); lines.push({ m, c: a[1] - m * a[0] });
+    }
+    lines.sort((a, b) => a.m - b.m);
+    return { method: 'textbook', max: lines[lines.length - 1], min: lines[0],
+      warn: 'No single straight line passes through every error bar. The max/min lines use the corners of the first and last error bars instead.' };
+  }
+
+  /* ---------- trials ---------- */
+  function averageTrials(values) {
+    const v = values.filter(isNum);
+    if (!v.length) return null;
+    const mean = v.reduce((a, b) => a + b, 0) / v.length;
+    const half = v.length > 1 ? (Math.max(...v) - Math.min(...v)) / 2 : 0;
+    return { mean, half, n: v.length };
+  }
+
+  /* ---------- nice axis ticks ---------- */
+  function niceStep(range, target) {
+    const raw = range / Math.max(1, target), e = Math.floor(Math.log10(raw)), f = raw / pow10(e);
+    const nf = f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10;
+    return nf * pow10(e);
+  }
+  function minorDiv(step) {
+    const f = Math.round(step / pow10(Math.floor(Math.log10(step) + 1e-9)));
+    return f === 2 ? 4 : 5;
+  }
+
+  function mode(arr) {
+    const c = new Map(); let best = null, bc = 0;
+    for (const a of arr) { const n = (c.get(a) || 0) + 1; c.set(a, n); if (n > bc || (n === bc && a < best)) { best = a; bc = n; } }
+    return best;
+  }
+
+  return { parseNum, isNum, fmtSF, fmtLSD, plainLSD, roundUnc, fmtValUnc, parseUnit, unitPow, unitMul, fmtUnit, isDimless,
+    TRANSFORMS, propagate, MODELS, fitModel, maxMinLines, averageTrials, niceStep, minorDiv, mode, pow10, wrap, solve };
+})();
+if (typeof module !== 'undefined') module.exports = GM;
+
+/* ===================================================================
+   Strothoff Graphical Laboratories — rendering: rich text, graph SVG, table SVG
+   Markup: ^{..} superscript, _{..} subscript (single char without braces)
+   =================================================================== */
+const GR = (() => {
+  const FONT = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+  const INK = '#1a1a1a', MUTED = '#6b6b6b', GRID_MAJ = '#cfcfcf', GRID_MIN = '#ececec';
+  const COL = { fit: '#b4532a', max: '#2f6f73', min: '#2f6f73', tan: '#6b3fa0', ex: '#9a9a9a' };
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* ---------- rich text ---------- */
+  function parse(s, level = 0, out = []) {
+    let buf = '', i = 0;
+    const flush = () => { if (buf) { out.push({ t: buf, l: level }); buf = ''; } };
+    while (i < s.length) {
+      const ch = s[i];
+      if ((ch === '^' || ch === '_') && i + 1 < s.length) {
+        flush();
+        let grp, j = i + 1;
+        if (s[j] === '{') {
+          let depth = 1, k = j + 1;
+          while (k < s.length && depth) { if (s[k] === '{') depth++; else if (s[k] === '}') depth--; k++; }
+          grp = s.slice(j + 1, k - 1); i = k;
+        } else { grp = s[j]; i = j + 1; }
+        parse(grp, level + (ch === '^' ? 1 : -1), out);
+      } else { buf += ch; i++; }
+    }
+    flush();
+    return out;
+  }
+  const offsetFor = (l, fs) => l === 0 ? 0 : l > 0 ? -fs * (0.38 + 0.22 * (l - 1)) : fs * 0.2 * -l;
+  const sizeFor = (l, fs) => l === 0 ? fs : fs * Math.pow(0.72, Math.min(2, Math.abs(l)));
+  function toSVG(markup, fs) {
+    let cur = 0, out = '';
+    for (const seg of parse(String(markup))) {
+      const off = offsetFor(seg.l, fs), dy = off - cur; cur = off;
+      out += `<tspan${dy ? ` dy="${dy.toFixed(2)}"` : ''}${seg.l ? ` font-size="${sizeFor(seg.l, fs).toFixed(2)}"` : ''}>${esc(seg.t)}</tspan>`;
+    }
+    return out;
+  }
+  function toHTML(markup) {
+    const segs = parse(String(markup));
+    let out = '', level = 0;
+    const open = (l) => l > 0 ? '<sup>' : '<sub>', close = (l) => l > 0 ? '</sup>' : '</sub>';
+    const stack = [];
+    for (const seg of segs) {
+      while (stack.length && (Math.sign(seg.l) !== Math.sign(stack[stack.length - 1]) || Math.abs(seg.l) < Math.abs(stack[stack.length - 1]))) out += close(stack.pop());
+      level = stack.length ? stack[stack.length - 1] : 0;
+      while (Math.abs(level) < Math.abs(seg.l)) { level += Math.sign(seg.l); stack.push(level); out += open(level); }
+      out += esc(seg.t);
+    }
+    while (stack.length) out += close(stack.pop());
+    return out;
+  }
+  const SUPC = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '-': '⁻', '−': '⁻', '+': '⁺', 'n': 'ⁿ' };
+  const SUBC = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' };
+  function toPlain(markup) {
+    return parse(String(markup)).map(seg => {
+      if (seg.l === 0) return seg.t;
+      const map = seg.l > 0 ? SUPC : SUBC;
+      if ([...seg.t].every(c => map[c])) return [...seg.t].map(c => map[c]).join('');
+      return (seg.l > 0 ? '^' : '_') + (seg.t.length > 1 ? `(${seg.t})` : seg.t);
+    }).join('');
+  }
+  let _ctx = null;
+  function measure(markup, fs, weight = 400) {
+    if (!_ctx) { try { _ctx = document.createElement('canvas').getContext('2d'); } catch (e) { _ctx = null; } }
+    let w = 0;
+    for (const seg of parse(String(markup))) {
+      const size = sizeFor(seg.l, fs);
+      if (_ctx) { _ctx.font = `${weight} ${size}px ${FONT}`; w += _ctx.measureText(seg.t).width; }
+      else w += seg.t.length * size * 0.55;
+    }
+    return w;
+  }
+  function text(x, y, markup, { fs = 14, anchor = 'start', weight = 400, fill = INK, rotate = null, italic = false } = {}) {
+    const tr = rotate !== null ? ` transform="rotate(${rotate} ${x} ${y})"` : '';
+    return `<text x="${x.toFixed(2)}" y="${y.toFixed(2)}" font-size="${fs}" text-anchor="${anchor}" font-weight="${weight}"${italic ? ' font-style="italic"' : ''} fill="${fill}"${tr}>${toSVG(markup, fs)}</text>`;
+  }
+
+  /* ---------- axes ---------- */
+  function axisRange(lo, hi, includeZero, target) {
+    if (includeZero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    if (!(hi > lo)) { const d = Math.abs(lo) * 0.1 || 1; lo -= d; hi += d; }
+    let step = GM.niceStep(hi - lo, target);
+    let a = Math.floor(lo / step + 1e-9) * step, b = Math.ceil(hi / step - 1e-9) * step;
+    if (b - a < step) b = a + step;
+    return { lo: a, hi: b, step };
+  }
+  function ticks(lo, hi, step) {
+    const out = [], n = Math.round((hi - lo) / step);
+    const start = Math.ceil(lo / step - 1e-9);
+    for (let k = start; k * step <= hi + step * 1e-9 && out.length <= 200; k++) out.push(+(k * step).toPrecision(12));
+    return out;
+  }
+  function axisScale(lo, hi) {
+    const m = Math.max(Math.abs(lo), Math.abs(hi));
+    if (m === 0) return 0;
+    const e = Math.floor(Math.log10(m));
+    return (e >= 4 || e <= -3) ? e : 0;
+  }
+  function tickLabel(v, step, E) {
+    const s = step / GM.pow10(E), vv = v / GM.pow10(E);
+    const d = Math.max(0, -Math.floor(Math.log10(s) + 1e-9));
+    const str = (Math.abs(vv) < s * 1e-6 ? 0 : vv).toFixed(Math.min(10, d));
+    return str.replace(/^-/, '−');
+  }
+  function axisLabel(ax, E) {
+    const unit = ax.unitMarkup, mult = E ? `10^{${String(E).replace('-', '−')}}` : '';
+    const right = [mult, unit].filter(Boolean).join(' ');
+    return right ? `${ax.prefix} / ${right}` : ax.prefix;
+  }
+
+  /* ---------- the graph ---------- */
+  // V: view model from app. Returns {svg, geo}
+  function graph(V) {
+    const W = 960, fs = 15, tfs = 14;
+    const pts = V.points;
+    // data extents
+    let xlo = Infinity, xhi = -Infinity, ylo = Infinity, yhi = -Infinity;
+    for (const p of pts) {
+      xlo = Math.min(xlo, p.x - p.dx); xhi = Math.max(xhi, p.x + p.dx);
+      ylo = Math.min(ylo, p.y - p.dy); yhi = Math.max(yhi, p.y + p.dy);
+    }
+    if (!pts.length) { xlo = 0; xhi = 1; ylo = 0; yhi = 1; }
+    const ax = V.axes;
+    let X, Y;
+    if (ax.manual && ax.xmin < ax.xmax) X = { lo: ax.xmin, hi: ax.xmax, step: ax.xstep > 0 ? ax.xstep : GM.niceStep(ax.xmax - ax.xmin, 8) };
+    else X = axisRange(xlo, xhi, ax.origin, 8);
+    if (ax.manual && ax.ymin < ax.ymax) Y = { lo: ax.ymin, hi: ax.ymax, step: ax.ystep > 0 ? ax.ystep : GM.niceStep(ax.ymax - ax.ymin, 7) };
+    else Y = axisRange(ylo, yhi, ax.origin, 7);
+    const EX = axisScale(X.lo, X.hi), EY = axisScale(Y.lo, Y.hi);
+    const xt = ticks(X.lo, X.hi, X.step), yt = ticks(Y.lo, Y.hi, Y.step);
+    const ytl = yt.map(v => tickLabel(v, Y.step, EY));
+    const ytw = Math.max(...ytl.map(t => measure(t, tfs)), 10);
+
+    const mL = 28 + ytw + 16, mR = 30, mT = V.title ? 56 : 26;
+    const plotH = 470, resH = V.residuals && V.fit ? 150 : 0, gapRes = resH ? 64 : 0;
+    const pw = W - mL - mR;
+    const px = x => mL + (x - X.lo) / (X.hi - X.lo) * pw;
+    const py = y => mT + plotH - (y - Y.lo) / (Y.hi - Y.lo) * plotH;
+    const R = 4.2;
+    // which error bars are big enough to see at this scale?
+    const bars = { x: { vis: 0, zero: 0, tot: 0 }, y: { vis: 0, zero: 0, tot: 0 } };
+    for (const p of pts) {
+      const hx = Math.abs(px(p.x + p.dx) - px(p.x)), hy = Math.abs(py(p.y + p.dy) - py(p.y));
+      bars.x.tot++; bars.y.tot++;
+      if (!p.dx) bars.x.zero++; else if (hx > R + 0.6) bars.x.vis++;
+      if (!p.dy) bars.y.zero++; else if (hy > R + 0.6) bars.y.vis++;
+    }
+    const notes = (V.notes || []).concat(V.barNotes ? V.barNotes(bars) : []);
+    const H = mT + plotH + gapRes + resH + 66 + notes.length * 20 + 6;
+
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H.toFixed(0)}" width="${W}" height="${H.toFixed(0)}" font-family="${FONT}">`;
+    s += `<rect x="0" y="0" width="${W}" height="${H.toFixed(0)}" fill="#ffffff"/>`;
+    s += `<defs><clipPath id="gl-clip"><rect x="${mL}" y="${mT}" width="${pw}" height="${plotH}"/></clipPath>`;
+    if (V.residuals) s += `<clipPath id="gl-clip-r"><rect x="${mL}" y="${mT + plotH + gapRes}" width="${pw}" height="${resH}"/></clipPath>`;
+    s += `</defs>`;
+    if (V.title) s += text(W / 2, 32, V.title, { fs: 19, anchor: 'middle', weight: 600 });
+
+    // grid
+    const grid = (x0, x1, y0, y1, xs, ys, xstep, ystep, pxf, pyf) => {
+      let g = '';
+      if (V.grid === 'minor') {
+        const dx = xstep / GM.minorDiv(xstep), dy = ystep / GM.minorDiv(ystep);
+        for (const v of ticks(x0, x1, dx)) g += `<line x1="${pxf(v).toFixed(2)}" x2="${pxf(v).toFixed(2)}" y1="${pyf(y0).toFixed(2)}" y2="${pyf(y1).toFixed(2)}" stroke="${GRID_MIN}" stroke-width="0.8"/>`;
+        for (const v of ticks(y0, y1, dy)) g += `<line x1="${pxf(x0).toFixed(2)}" x2="${pxf(x1).toFixed(2)}" y1="${pyf(v).toFixed(2)}" y2="${pyf(v).toFixed(2)}" stroke="${GRID_MIN}" stroke-width="0.8"/>`;
+      }
+      if (V.grid !== 'none') {
+        for (const v of xs) g += `<line x1="${pxf(v).toFixed(2)}" x2="${pxf(v).toFixed(2)}" y1="${pyf(y0).toFixed(2)}" y2="${pyf(y1).toFixed(2)}" stroke="${GRID_MAJ}" stroke-width="1"/>`;
+        for (const v of ys) g += `<line x1="${pxf(x0).toFixed(2)}" x2="${pxf(x1).toFixed(2)}" y1="${pyf(v).toFixed(2)}" y2="${pyf(v).toFixed(2)}" stroke="${GRID_MAJ}" stroke-width="1"/>`;
+      }
+      // zero lines
+      if (x0 < 0 && x1 > 0) g += `<line x1="${pxf(0).toFixed(2)}" x2="${pxf(0).toFixed(2)}" y1="${pyf(y0).toFixed(2)}" y2="${pyf(y1).toFixed(2)}" stroke="${INK}" stroke-width="1.2"/>`;
+      if (y0 < 0 && y1 > 0) g += `<line x1="${pxf(x0).toFixed(2)}" x2="${pxf(x1).toFixed(2)}" y1="${pyf(0).toFixed(2)}" y2="${pyf(0).toFixed(2)}" stroke="${INK}" stroke-width="1.2"/>`;
+      return g;
+    };
+    s += grid(X.lo, X.hi, Y.lo, Y.hi, xt, yt, X.step, Y.step, px, py);
+    // frame + ticks
+    s += `<rect x="${mL}" y="${mT}" width="${pw}" height="${plotH}" fill="none" stroke="${INK}" stroke-width="1.4"/>`;
+    xt.forEach(v => {
+      const x = px(v);
+      s += `<line x1="${x.toFixed(2)}" x2="${x.toFixed(2)}" y1="${mT + plotH}" y2="${mT + plotH + 6}" stroke="${INK}" stroke-width="1.2"/>`;
+      if (!resH) s += text(x, mT + plotH + 24, tickLabel(v, X.step, EX), { fs: tfs, anchor: 'middle' });
+    });
+    yt.forEach((v, i) => {
+      const y = py(v);
+      s += `<line x1="${mL - 6}" x2="${mL}" y1="${y.toFixed(2)}" y2="${y.toFixed(2)}" stroke="${INK}" stroke-width="1.2"/>`;
+      s += text(mL - 10, y + 5, ytl[i], { fs: tfs, anchor: 'end' });
+    });
+    s += text(18, mT + plotH / 2, axisLabel(V.yAxis, EY), { fs, anchor: 'middle', rotate: -90 });
+
+    /* curves */
+    const clampPx = v => Math.max(-5000, Math.min(5000, v));
+    const curvePath = (f, x0, x1, pxf, pyf) => {
+      let d = '', pen = false;
+      const N = 500;
+      for (let k = 0; k <= N; k++) {
+        const x = x0 + (x1 - x0) * k / N, y = f(x);
+        if (!isFinite(y)) { pen = false; continue; }
+        d += `${pen ? 'L' : 'M'}${pxf(x).toFixed(2)},${clampPx(pyf(y)).toFixed(2)}`;
+        pen = true;
+      }
+      return d;
+    };
+    const fitDomain = (fit) => {
+      if (fit && fit.needXpos && X.lo <= 0) return [Math.max(X.hi * 1e-4, 1e-300), X.hi];
+      return [X.lo, X.hi];
+    };
+    let curves = '';
+    if (V.maxmin) {
+      for (const [L, dash] of [[V.maxmin.max, '10 6'], [V.maxmin.min, '3 5']]) {
+        curves += `<path d="${curvePath(x => L.m * x + L.c, X.lo, X.hi, px, py)}" fill="none" stroke="${COL.max}" stroke-width="1.8" stroke-dasharray="${dash}"/>`;
+      }
+    }
+    if (V.fit) {
+      const [a, b] = fitDomain(V.fit);
+      curves += `<path d="${curvePath(V.fit.f, a, b, px, py)}" fill="none" stroke="${COL.fit}" stroke-width="2.2"/>`;
+    }
+    if (V.tangent) {
+      const T = V.tangent, half = (X.hi - X.lo) * 0.28;
+      curves += `<path d="M${px(T.x - half).toFixed(2)},${clampPx(py(T.y - T.m * half)).toFixed(2)}L${px(T.x + half).toFixed(2)},${clampPx(py(T.y + T.m * half)).toFixed(2)}" stroke="${COL.tan}" stroke-width="2" fill="none"/>`;
+    }
+    s += `<g clip-path="url(#gl-clip)">${curves}</g>`;
+
+    /* points + error bars */
+    const geoPts = [];
+    const drawPts = (list, pxf, pyf, yOf, dyOf, clip, record) => {
+      let g = '';
+      for (const p of list) {
+        const cx = pxf(p.x), cy = pyf(yOf(p)), col = p.excluded ? COL.ex : INK;
+        const hx = Math.abs(pxf(p.x + p.dx) - cx), hy = Math.abs(pyf(yOf(p) + dyOf(p)) - cy);
+        const cap = 5;
+        if (hx > R + 0.6) g += `<path d="M${(cx - hx).toFixed(2)},${cy.toFixed(2)}H${(cx + hx).toFixed(2)}M${(cx - hx).toFixed(2)},${(cy - cap).toFixed(2)}V${(cy + cap).toFixed(2)}M${(cx + hx).toFixed(2)},${(cy - cap).toFixed(2)}V${(cy + cap).toFixed(2)}" stroke="${col}" stroke-width="1.3" fill="none"/>`;
+        if (hy > R + 0.6) g += `<path d="M${cx.toFixed(2)},${(cy - hy).toFixed(2)}V${(cy + hy).toFixed(2)}M${(cx - cap).toFixed(2)},${(cy - hy).toFixed(2)}H${(cx + cap).toFixed(2)}M${(cx - cap).toFixed(2)},${(cy + hy).toFixed(2)}H${(cx + cap).toFixed(2)}" stroke="${col}" stroke-width="1.3" fill="none"/>`;
+        g += p.excluded
+          ? `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${R + 0.6}" fill="#ffffff" stroke="${COL.ex}" stroke-width="1.6"/><path d="M${(cx - 3).toFixed(2)},${(cy - 3).toFixed(2)}l6,6m0,-6l-6,6" stroke="${COL.ex}" stroke-width="1.3"/>`
+          : `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${R}" fill="${INK}"/>`;
+        if (record) geoPts.push({ i: p.row, px: cx, py: cy });
+      }
+      return `<g clip-path="url(#${clip})">${g}</g>`;
+    };
+    s += drawPts(pts, px, py, p => p.y, p => p.dy, 'gl-clip', true);
+    if (V.tangent) s += `<path d="M${px(V.tangent.x).toFixed(2)},${(py(V.tangent.y) - 7).toFixed(2)}l7,7l-7,7l-7,-7z" fill="${COL.tan}" stroke="#fff" stroke-width="1.2" clip-path="url(#gl-clip)"/>`;
+
+    /* residuals panel */
+    let bottomOfPlots = mT + plotH, pyR = null, RY = null;
+    if (resH) {
+      const top = mT + plotH + gapRes;
+      const res = pts.map(p => ({ ...p, r: p.y - V.fit.f(p.x) })).filter(p => isFinite(p.r));
+      let rmax = Math.max(1e-300, ...res.map(p => Math.abs(p.r) + p.dy));
+      RY = axisRange(-rmax, rmax, true, 4);
+      const ER = axisScale(RY.lo, RY.hi);
+      pyR = y => top + resH - (y - RY.lo) / (RY.hi - RY.lo) * resH;
+      const rt = ticks(RY.lo, RY.hi, RY.step);
+      s += grid(X.lo, X.hi, RY.lo, RY.hi, xt, rt, X.step, RY.step, px, pyR);
+      s += `<line x1="${mL}" x2="${mL + pw}" y1="${pyR(0).toFixed(2)}" y2="${pyR(0).toFixed(2)}" stroke="${COL.fit}" stroke-width="1.6"/>`;
+      s += `<rect x="${mL}" y="${top}" width="${pw}" height="${resH}" fill="none" stroke="${INK}" stroke-width="1.4"/>`;
+      rt.forEach(v => {
+        s += `<line x1="${mL - 6}" x2="${mL}" y1="${pyR(v).toFixed(2)}" y2="${pyR(v).toFixed(2)}" stroke="${INK}" stroke-width="1.2"/>`;
+        s += text(mL - 10, pyR(v) + 5, tickLabel(v, RY.step, ER), { fs: tfs - 1, anchor: 'end' });
+      });
+      xt.forEach(v => s += `<line x1="${px(v).toFixed(2)}" x2="${px(v).toFixed(2)}" y1="${top + resH}" y2="${top + resH + 6}" stroke="${INK}" stroke-width="1.2"/>`);
+      s += drawPts(res, px, pyR, p => p.r, p => p.dy, 'gl-clip-r', false);
+      s += text(mL + 8, top + 18, 'Residuals', { fs: 13, weight: 600, fill: MUTED });
+      s += text(18, top + resH / 2, `residual / ${[ER ? `10^{${String(ER).replace('-', '−')}}` : '', V.yAxis.unitMarkup].filter(Boolean).join(' ') || '–'}`, { fs: 13, anchor: 'middle', rotate: -90 });
+      bottomOfPlots = top + resH;
+    }
+    if (resH) xt.forEach(v => s += text(px(v), bottomOfPlots + 24, tickLabel(v, X.step, EX), { fs: tfs, anchor: 'middle' }));
+    s += text(mL + pw / 2, bottomOfPlots + 52, axisLabel(V.xAxis, EX), { fs, anchor: 'middle' });
+
+    /* notes below graph */
+    notes.forEach((n, k) => s += text(mL, bottomOfPlots + 76 + k * 20, n, { fs: 13, italic: true, fill: '#444' }));
+
+    /* legend / equation box */
+    if (V.box !== 'off' && V.legend.length) {
+      const lfs = 14, lh = 22, pad = 10, sw = 30;
+      const w = Math.max(...V.legend.map(l => measure(l.text, lfs))) + sw + pad * 2 + 8;
+      const h = V.legend.length * lh + pad * 2 - 4;
+      const inset = 10;
+      const cands = {
+        tl: [mL + inset, mT + inset], tr: [mL + pw - w - inset, mT + inset],
+        bl: [mL + inset, mT + plotH - h - inset], br: [mL + pw - w - inset, mT + plotH - h - inset],
+      };
+      let pos = V.box;
+      if (!cands[pos]) {
+        // auto: corner covering the fewest points and curve samples
+        let best = Infinity;
+        const samples = geoPts.map(g => [g.px, g.py]);
+        if (V.fit) { const [a, b] = fitDomain(V.fit); for (let k = 0; k <= 60; k++) { const x = a + (b - a) * k / 60, y = V.fit.f(x); if (isFinite(y)) samples.push([px(x), py(y)]); } }
+        for (const key of ['tl', 'br', 'tr', 'bl']) {
+          const [bx, by] = cands[key];
+          const c = samples.filter(([sx, sy]) => sx > bx - 8 && sx < bx + w + 8 && sy > by - 8 && sy < by + h + 8).length;
+          if (c < best) { best = c; pos = key; }
+        }
+      }
+      const [bx, by] = cands[pos];
+      s += `<rect x="${bx.toFixed(2)}" y="${by.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" fill="#ffffff" fill-opacity="0.94" stroke="#9a9a9a" stroke-width="1"/>`;
+      V.legend.forEach((l, k) => {
+        const cy = by + pad + k * lh + 7, x0 = bx + pad;
+        if (l.kind === 'point') s += `<circle cx="${x0 + sw / 2}" cy="${cy}" r="4.2" fill="${INK}"/>`;
+        else if (l.kind === 'excluded') s += `<circle cx="${x0 + sw / 2}" cy="${cy}" r="4.8" fill="#fff" stroke="${COL.ex}" stroke-width="1.6"/>`;
+        else if (l.kind === 'none') { }
+        else s += `<line x1="${x0}" x2="${x0 + sw}" y1="${cy}" y2="${cy}" stroke="${COL[l.kind]}" stroke-width="${l.kind === 'fit' ? 2.4 : 2}"${l.dash ? ` stroke-dasharray="${l.dash}"` : ''}/>`;
+        s += text(x0 + sw + 8, cy + 5, l.text, { fs: lfs });
+      });
+    }
+
+    if (V.blocked) {
+      s += `<rect x="${mL}" y="${mT}" width="${pw}" height="${plotH}" fill="#ffffff" fill-opacity="0.85"/>`;
+      s += text(mL + pw / 2, mT + plotH / 2 - 6, V.blocked, { fs: 17, anchor: 'middle', weight: 600, fill: '#8a2d12' });
+      s += text(mL + pw / 2, mT + plotH / 2 + 20, 'Fix the highlighted cells in the data table to plot.', { fs: 14, anchor: 'middle', fill: '#444' });
+    }
+    s += '</svg>';
+    return {
+      svg: s, W, H,
+      geo: { pts: geoPts, mL, mT, pw, plotH, X, Y, invX: v => X.lo + (v - mL) / pw * (X.hi - X.lo), invY: v => Y.lo + (mT + plotH - v) / plotH * (Y.hi - Y.lo) },
+      bars,
+    };
+  }
+
+  /* ---------- table as SVG (for PNG export) ---------- */
+  // head: array of rows, each [{text, span}] ; body: array of rows [text...]
+  function tableSVG(head, body, caption) {
+    const fs = 15, padX = 14, rowH = 30;
+    const ncol = Math.max(...body.map(r => r.length), ...head.map(r => r.reduce((a, c) => a + (c.span || 1), 0)));
+    const widths = Array(ncol).fill(40);
+    body.forEach(r => r.forEach((c, i) => widths[i] = Math.max(widths[i], measure(c, fs) + padX * 2)));
+    head.forEach(r => { let col = 0; r.forEach(c => { if ((c.span || 1) === 1) widths[col] = Math.max(widths[col], measure(c.text, fs, 600) + padX * 2); col += c.span || 1; }); });
+    head.forEach(r => { let col = 0; r.forEach(c => { const sp = c.span || 1; if (sp > 1) { const need = measure(c.text, fs, 600) + padX * 2, have = widths.slice(col, col + sp).reduce((a, b) => a + b, 0); if (need > have) for (let k = 0; k < sp; k++) widths[col + k] += (need - have) / sp; } col += sp; }); });
+    const W = widths.reduce((a, b) => a + b, 0) + 40, capH = caption ? 34 : 0;
+    const H = capH + (head.length + body.length) * rowH + 40;
+    const x0 = 20, xs = [x0]; widths.forEach(w => xs.push(xs[xs.length - 1] + w));
+    let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="${FONT}"><rect width="${W}" height="${H}" fill="#fff"/>`;
+    if (caption) s += text(x0, 30, caption, { fs: 16, weight: 600 });
+    let y = 20 + capH;
+    s += `<line x1="${x0}" x2="${xs[ncol]}" y1="${y}" y2="${y}" stroke="${INK}" stroke-width="1.6"/>`;
+    head.forEach((r, ri) => {
+      let col = 0;
+      r.forEach(c => {
+        const sp = c.span || 1, cx = (xs[col] + xs[col + sp]) / 2;
+        s += text(cx, y + 20, c.text, { fs, anchor: 'middle', weight: 600 });
+        if (sp > 1 && ri < head.length - 1) s += `<line x1="${xs[col] + 6}" x2="${xs[col + sp] - 6}" y1="${y + rowH - 2}" y2="${y + rowH - 2}" stroke="${INK}" stroke-width="0.8"/>`;
+        col += sp;
+      });
+      y += rowH;
+    });
+    s += `<line x1="${x0}" x2="${xs[ncol]}" y1="${y}" y2="${y}" stroke="${INK}" stroke-width="1"/>`;
+    body.forEach(r => {
+      r.forEach((c, i) => s += text((xs[i] + xs[i + 1]) / 2, y + 20, c, { fs, anchor: 'middle' }));
+      y += rowH;
+    });
+    s += `<line x1="${x0}" x2="${xs[ncol]}" y1="${y}" y2="${y}" stroke="${INK}" stroke-width="1.6"/></svg>`;
+    return { svg: s, W, H };
+  }
+
+  return { graph, tableSVG, toSVG, toHTML, toPlain, measure, esc, COL };
+})();
+
+/* ===================================================================
+   Strothoff Graphical Laboratories — application
+   =================================================================== */
+(() => {
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const { parseNum, isNum, fmtSF, fmtValUnc, parseUnit, fmtUnit, TRANSFORMS, MODELS } = GM;
+  const H = GR.toHTML, P = GR.toPlain;
+  const MAXT = 6, STORE = 'graphlab.v1';
+
+  /* ---------------- state ---------------- */
+  const blankRow = () => ({ x: '', y: Array(MAXT).fill(''), dx: '', dy: '', ex: false });
+  function defaultState() {
+    return {
+      v: 1, title: '', showTitle: true,
+      x: { name: '', sym: 'x', unit: '', unc: '', mode: 'abs' },
+      y: { name: '', sym: 'y', unit: '', unc: '', mode: 'abs' },
+      trials: 1, rows: Array.from({ length: 8 }, blankRow), perPoint: false, strict: true,
+      linX: 'none', linY: 'none', fit: 'linear', maxmin: true, residuals: false,
+      tool: 'exclude', tanX: '', interpX: '', interpY: '', litVal: '', litQty: '',
+      scale: 'auto', axes: { xmin: '', xmax: '', xstep: '', ymin: '', ymax: '', ystep: '' }, origin: true,
+      grid: 'minor', box: 'auto', sf: 'auto', sfU: 1, tab: 'raw',
+    };
+  }
+  function exampleState() {
+    const s = defaultState();
+    Object.assign(s, {
+      title: 'Period of a simple pendulum against its length',
+      x: { name: 'Length', sym: 'L', unit: 'm', unc: '0.002', mode: 'abs' },
+      y: { name: 'Period', sym: 'T', unit: 's', unc: '0.01', mode: 'abs' },
+      trials: 3, linY: 'sq', fit: 'linear', maxmin: true,
+    });
+    const data = [['0.200', '0.90', '0.88', '0.91'], ['0.300', '1.11', '1.09', '1.10'], ['0.400', '1.26', '1.28', '1.27'],
+      ['0.500', '1.43', '1.41', '1.42'], ['0.600', '1.54', '1.56', '1.55'], ['0.700', '1.69', '1.67', '1.68'], ['0.800', '1.80', '1.78', '1.79']];
+    s.rows = data.map(r => { const b = blankRow(); b.x = r[0]; b.y[0] = r[1]; b.y[1] = r[2]; b.y[2] = r[3]; return b; });
+    s.rows.push(blankRow());
+    return s;
+  }
+  function normalise(s) {
+    const d = defaultState();
+    const out = Object.assign(d, s || {});
+    out.x = Object.assign(defaultState().x, out.x || {});
+    out.y = Object.assign(defaultState().y, out.y || {});
+    out.axes = Object.assign(defaultState().axes, out.axes || {});
+    out.rows = (Array.isArray(out.rows) && out.rows.length ? out.rows : d.rows).map(r => {
+      const b = blankRow(); Object.assign(b, r || {});
+      b.y = Array.from({ length: MAXT }, (_, k) => String((r && r.y && r.y[k]) ?? ''));
+      ['x', 'dx', 'dy'].forEach(k => b[k] = String(b[k] ?? '')); b.ex = !!b.ex; return b;
+    });
+    out.trials = Math.max(1, Math.min(MAXT, out.trials | 0 || 1));
+    if (!MODELS[out.fit]) out.fit = 'none';
+    if (!TRANSFORMS[out.linX]) out.linX = 'none';
+    if (!TRANSFORMS[out.linY]) out.linY = 'none';
+    return out;
+  }
+  let S = defaultState();
+
+  /* ---------------- compute ---------------- */
+  function axisInfo(q, tid) {
+    const T = TRANSFORMS[tid], sym = q.sym.trim() || (q === S.x ? 'x' : 'y');
+    const u = parseUnit(q.unit), um = fmtUnit(u);
+    let symT, prefix, unitT;
+    if (tid === 'none') { symT = sym; prefix = [q.name.trim(), sym].filter(Boolean).join(' '); unitT = u; }
+    else if (T.log) { symT = um ? `${T.log}(${sym} / ${um})` : `${T.log} ${sym}`; prefix = symT; unitT = { terms: [] }; }
+    else { symT = T.sym(sym); prefix = symT; unitT = T.unit(u); }
+    return { T, sym, symRaw: sym, symT, prefix, unit: u, unitMarkup: fmtUnit(unitT), unitT, unitRaw: um, name: q.name.trim() };
+  }
+  const colName = (k) => k === 'x' ? 'x' : k === 'dx' ? 'Δx' : k === 'dy' ? 'Δy' : `trial ${+k.slice(1) + 1}`;
+
+  function compute() {
+    const D = { points: [], rowsOut: [], flags: new Map(), issues: [], infos: [], notes: [] };
+    const ax = axisInfo(S.x, S.linX), ay = axisInfo(S.y, S.linY);
+    D.ax = ax; D.ay = ay;
+    const ux = parseNum(S.x.unc), uy = parseNum(S.y.unc);
+    if (S.x.unc.trim() && !ux.ok) D.issues.push({ msg: `The x uncertainty "${S.x.unc}" is not a number.` });
+    if (S.y.unc.trim() && !uy.ok) D.issues.push({ msg: `The y uncertainty "${S.y.unc}" is not a number.` });
+    const nT = S.trials;
+    // parse all cells
+    const parsed = S.rows.map(r => ({
+      x: parseNum(r.x), y: r.y.slice(0, nT).map(parseNum),
+      dx: S.perPoint ? parseNum(r.dx) : { empty: true }, dy: S.perPoint ? parseNum(r.dy) : { empty: true },
+    }));
+    // number check
+    parsed.forEach((p, i) => {
+      const chk = (c, k) => { if (!c.ok && !c.empty) { D.flags.set(`${i}:${k}`, 'Not a number'); D.issues.push({ msg: `Row ${i + 1}, ${colName(k)}: "${c.raw}" is not a number.`, r: i, k }); } };
+      chk(p.x, 'x'); p.y.forEach((c, k) => chk(c, 'y' + k)); chk(p.dx, 'dx'); chk(p.dy, 'dy');
+      const hasY = p.y.some(c => c.ok), hasX = p.x.ok;
+      if (hasX !== hasY && (hasX || hasY)) D.infos.push(`Row ${i + 1} has ${hasX ? 'no y value' : 'no x value'} yet, so it is not plotted.`);
+    });
+    // precision (strict mode)
+    const sfs = { x: [], y: [] };
+    parsed.forEach(p => { if (p.x.ok) sfs.x.push(p.x.sf); p.y.forEach(c => c.ok && sfs.y.push(c.sf)); });
+    if (S.strict) {
+      const colExp = (cells, unc, mode) => (mode === 'abs' && unc.ok && unc.value > 0) ? { lsd: unc.lsd, why: 'unc' } : { lsd: GM.mode(cells.filter(c => c.ok).map(c => c.lsd)), why: 'col' };
+      const ex = colExp(parsed.map(p => p.x), ux, S.x.mode);
+      const ey = colExp(parsed.flatMap(p => p.y), uy, S.y.mode);
+      const check = (c, i, k, exp, uncStr) => {
+        if (!c.ok || exp.lsd === null || c.lsd === exp.lsd) return;
+        const sug = GM.plainLSD(c.value, exp.lsd);
+        const why = exp.why === 'unc' ? `to match its uncertainty (± ${uncStr})` : 'to match the rest of the column';
+        const more = c.lsd < exp.lsd;
+        D.flags.set(`${i}:${k}`, `Write as ${sug}`);
+        D.issues.push({ r: i, k, msg: `Row ${i + 1}, ${colName(k)}: <code>${GR.esc(c.raw)}</code> ${more ? 'has too many decimal places' : 'is missing decimal places'}. Write it as <code>${GR.esc(sug)}</code> ${why}.` });
+      };
+      parsed.forEach((p, i) => {
+        const exX = p.dx.ok && p.dx.value > 0 ? { lsd: p.dx.lsd, why: 'unc' } : ex;
+        const exY = p.dy.ok && p.dy.value > 0 ? { lsd: p.dy.lsd, why: 'unc' } : ey;
+        check(p.x, i, 'x', exX, p.dx.ok ? p.dx.raw : S.x.unc);
+        p.y.forEach((c, k) => check(c, i, 'y' + k, exY, p.dy.ok ? p.dy.raw : S.y.unc));
+      });
+    }
+    D.blocked = S.strict && D.issues.length ? `${D.issues.length} ${D.issues.length === 1 ? 'value needs' : 'values need'} fixing` : '';
+    // significant figures
+    const sfAuto = Math.max(2, Math.min(6, Math.min(GM.mode(sfs.x) || 3, GM.mode(sfs.y) || 3)));
+    D.sf = S.sf === 'auto' ? sfAuto : +S.sf; D.sfAuto = sfAuto;
+    // points
+    parsed.forEach((p, i) => {
+      const ys = p.y.filter(c => c.ok).map(c => c.value);
+      if (!p.x.ok || !ys.length) return;
+      const x = p.x.value, avg = GM.averageTrials(ys);
+      const dxI = p.dx.ok ? Math.abs(p.dx.value) : ux.ok ? (S.x.mode === 'pct' ? Math.abs(x) * ux.value / 100 : Math.abs(ux.value)) : 0;
+      const dyI = p.dy.ok ? Math.abs(p.dy.value) : uy.ok ? (S.y.mode === 'pct' ? Math.abs(avg.mean) * uy.value / 100 : Math.abs(uy.value)) : 0;
+      const dy = Math.max(avg.half, dyI);
+      const row = { row: i, x, dx: dxI, y: avg.mean, dy, n: avg.n, half: avg.half, ex: S.rows[i].ex, ylsd: GM.mode(p.y.filter(c => c.ok).map(c => c.lsd)), xlsd: p.x.lsd };
+      if (!ax.T.ok(x) || !ay.T.ok(avg.mean)) {
+        D.infos.push(`Row ${i + 1} cannot be plotted as ${P(!ax.T.ok(x) ? ax.symT : ay.symT)} (${!ax.T.ok(x) ? 'x' : 'y'} = ${fmtSF(!ax.T.ok(x) ? x : avg.mean, 3).replace(/\^\{|\}/g, '')}).`);
+        row.bad = true; D.rowsOut.push(row); return;
+      }
+      row.X = ax.T.f(x); row.dX = GM.propagate(ax.T, x, dxI);
+      row.Y = ay.T.f(avg.mean); row.dY = GM.propagate(ay.T, avg.mean, dy);
+      D.rowsOut.push(row);
+      D.points.push({ row: i, x: row.X, y: row.Y, dx: row.dX, dy: row.dY, excluded: row.ex });
+    });
+    const used = D.points.filter(p => !p.excluded);
+    D.nUsed = used.length; D.nEx = D.points.length - used.length;
+    // fit
+    if (S.fit !== 'none' && !D.blocked) {
+      const r = GM.fitModel(S.fit, used);
+      if (r && r.err) D.fitErr = r.err; else if (r) D.fit = r;
+    }
+    if (D.fit && S.fit === 'linear' && S.maxmin && used.length >= 2) {
+      const mm = GM.maxMinLines(used);
+      if (mm.err) D.mmErr = mm.err; else D.maxmin = mm;
+      if (D.maxmin && used.every(p => !p.dx && !p.dy)) { D.maxmin = null; D.mmErr = 'Enter uncertainties to get max/min lines.'; }
+    }
+    // tangent
+    const tx = parseNum(S.tanX);
+    if (D.fit && tx.ok) {
+      const y0 = D.fit.f(tx.value), m = D.fit.df(tx.value);
+      if (isFinite(y0) && isFinite(m)) D.tangent = { x: tx.value, y: y0, m };
+    }
+    return D;
+  }
+
+  /* ---------------- formatting helpers ---------------- */
+  const sfm = (v, D) => fmtSF(v, D.sf);
+  const unitSpan = u => { const m = fmtUnit(u); return m ? ` ${m}` : ''; };
+  function paramStrings(D) {
+    const M = MODELS[D.fit.id];
+    return D.fit.p.map(v => sfm(v, D));
+  }
+  function eqMarkup(D, p, id) {
+    const M = MODELS[id || D.fit.id];
+    const strs = p.map(v => sfm(v, D));
+    return M.eq(D.ax.symT, D.ay.symT, strs);
+  }
+
+  /* ---------------- table (raw, editable) ---------------- */
+  function headingMarkup(q, axis) {
+    const a = axisInfo(q, 'none');
+    const left = a.prefix || a.sym;
+    return a.unitRaw ? `${left} / ${a.unitRaw}` : left;
+  }
+  function uncMarkup(q) {
+    const u = parseNum(q.unc);
+    if (!u.ok || u.value === 0) return '';
+    return q.mode === 'pct' ? `± ${u.raw.replace('-', '')} %` : `± ${u.raw.replace('-', '')}`;
+  }
+  function renderRawTable() {
+    const host = $('#tableHost');
+    const nT = S.trials, pp = S.perPoint, two = nT > 1 || pp;
+    let h = '<table class="dt"><thead><tr>';
+    const hx = H(headingMarkup(S.x)), hy = H(headingMarkup(S.y));
+    const ux = uncMarkup(S.x), uy = uncMarkup(S.y);
+    h += `<th${two ? ' rowspan="2"' : ''}>#</th>`;
+    h += `<th colspan="${pp ? 2 : 1}"${two && !pp ? ' rowspan="2"' : ''}>${hx}${!pp && ux ? `<span class="unc">${H(ux)}</span>` : ''}</th>`;
+    h += `<th colspan="${nT + (pp ? 1 : 0)}"${two && !(nT > 1 || pp) ? ' rowspan="2"' : ''}>${hy}${!pp && uy ? `<span class="unc">${H(uy)}</span>` : ''}</th>`;
+    h += `<th${two ? ' rowspan="2"' : ''} aria-label="Row tools"></th></tr>`;
+    if (two) {
+      h += '<tr>';
+      if (pp) h += `<th>value</th><th>± abs</th>`;
+      if (nT > 1 || pp) { for (let k = 0; k < nT; k++) h += `<th>${nT > 1 ? `trial ${k + 1}` : 'value'}</th>`; if (pp) h += `<th>± abs</th>`; }
+      h += '</tr>';
+    }
+    h += '</thead><tbody>';
+    S.rows.forEach((r, i) => h += rowHTML(r, i));
+    h += '</tbody></table>';
+    host.innerHTML = h;
+    setH1();
+    decorateTable();
+  }
+  function setH1() {
+    const host = $('#tableHost'), tr = $('thead tr', host);
+    if (tr) host.style.setProperty('--h1', tr.getBoundingClientRect().height + 'px');
+  }
+  function rowHTML(r, i) {
+    const cell = (k, v) => `<td><input data-r="${i}" data-k="${k}" value="${GR.esc(v)}" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="Row ${i + 1} ${colName(k)}"></td>`;
+    let h = `<tr data-r="${i}"${r.ex ? ' class="ex"' : ''}><td class="idx">${i + 1}</td>`;
+    h += cell('x', r.x);
+    if (S.perPoint) h += cell('dx', r.dx);
+    for (let k = 0; k < S.trials; k++) h += cell('y' + k, r.y[k]);
+    if (S.perPoint) h += cell('dy', r.dy);
+    h += `<td class="tools"><button class="exb" data-act="ex" data-r="${i}" title="${r.ex ? 'Include this point in the fit' : 'Exclude this point from the fit'}">${r.ex ? '⊘' : '○'}</button><button data-act="del" data-r="${i}" title="Delete row">×</button></td></tr>`;
+    return h;
+  }
+  function decorateTable() {
+    if (!LAST) return;
+    $$('#tableHost input[data-k]').forEach(inp => {
+      const key = `${inp.dataset.r}:${inp.dataset.k}`, f = LAST.flags.get(key);
+      inp.classList.toggle('bad', !!f);
+      if (f) inp.title = f; else inp.removeAttribute('title');
+    });
+    $$('#tableHost tr[data-r]').forEach(tr => {
+      const i = +tr.dataset.r, ex = !!S.rows[i]?.ex;
+      tr.classList.toggle('ex', ex);
+      const b = $('.exb', tr); if (b) { b.textContent = ex ? '⊘' : '○'; b.title = ex ? 'Include this point in the fit' : 'Exclude this point from the fit'; }
+    });
+  }
+  function ensureSpareRow() {
+    const last = S.rows[S.rows.length - 1];
+    if (last && (last.x.trim() || last.y.some(v => v.trim()))) {
+      S.rows.push(blankRow());
+      const tb = $('#tableHost tbody');
+      if (tb) tb.insertAdjacentHTML('beforeend', rowHTML(S.rows[S.rows.length - 1], S.rows.length - 1));
+    }
+  }
+  function cellKeys() { const k = ['x']; if (S.perPoint) k.push('dx'); for (let t = 0; t < S.trials; t++) k.push('y' + t); if (S.perPoint) k.push('dy'); return k; }
+  function setCell(i, k, v) {
+    const r = S.rows[i]; if (!r) return;
+    if (k[0] === 'y' && k.length > 1 && k !== 'dy') r.y[+k.slice(1)] = v; else r[k] = v;
+  }
+  function focusCell(i, k) { const el = $(`#tableHost input[data-r="${i}"][data-k="${k}"]`); if (el) { el.focus(); el.select(); } }
+
+  /* ---------------- processed table ---------------- */
+  function processedModel(D) {
+    const nT = S.trials, cols = [];
+    const ax = D.ax, ay = D.ay;
+    const axN = axisInfo(S.x, 'none'), ayN = axisInfo(S.y, 'none');
+    const unitPart = (u) => u ? ` / ${u}` : '';
+    const yLabel = (nT > 1 ? `Mean ${ayN.name ? ayN.name.toLowerCase() + ' ' : ''}${ayN.sym}` : `${ayN.prefix}`);
+    cols.push({ h: `${axN.prefix}${unitPart(axN.unitRaw)}`, get: r => fmtValUnc(r.x, r.dx, S.sfU).value, raw: r => r.dx ? null : S.rows[r.row].x });
+    cols.push({ h: `Δ${axN.sym}${unitPart(axN.unitRaw)}`, get: r => r.dx ? fmtValUnc(r.x, r.dx, S.sfU).unc : '0' });
+    cols.push({ h: `${yLabel}${unitPart(ayN.unitRaw)}`, get: r => r.dy ? fmtValUnc(r.y, r.dy, S.sfU).value : fmtSF(r.y, D.sf) });
+    cols.push({ h: `Δ${ayN.sym}${unitPart(ayN.unitRaw)}`, get: r => r.dy ? fmtValUnc(r.y, r.dy, S.sfU).unc : '0' });
+    if (S.linX !== 'none') {
+      cols.push({ h: `${ax.symT}${unitPart(ax.unitMarkup)}`, get: r => r.bad ? '—' : r.dX ? fmtValUnc(r.X, r.dX, S.sfU).value : fmtSF(r.X, D.sf) });
+      cols.push({ h: `Δ${GM.wrap(ax.symT)}${unitPart(ax.unitMarkup)}`, get: r => r.bad ? '—' : r.dX ? fmtValUnc(r.X, r.dX, S.sfU).unc : '0' });
+    }
+    if (S.linY !== 'none') {
+      cols.push({ h: `${ay.symT}${unitPart(ay.unitMarkup)}`, get: r => r.bad ? '—' : r.dY ? fmtValUnc(r.Y, r.dY, S.sfU).value : fmtSF(r.Y, D.sf) });
+      cols.push({ h: `Δ${GM.wrap(ay.symT)}${unitPart(ay.unitMarkup)}`, get: r => r.bad ? '—' : r.dY ? fmtValUnc(r.Y, r.dY, S.sfU).unc : '0' });
+    }
+    // values with ×10^n factors: move the factor into the cell markup (rare)
+    const fmtCell = (c, r) => {
+      const v = c.get(r);
+      return v;
+    };
+    const body = D.rowsOut.map(r => cols.map(c => fmtCell(c, r)));
+    const notes = [];
+    if (nT > 1) notes.push(`Uncertainty in the mean = half the range of the trials, or the instrument uncertainty if that is larger.`);
+    if (D.rowsOut.some(r => r.ex)) notes.push(`Rows marked * are excluded from the fit.`);
+    if (S.linX !== 'none' || S.linY !== 'none') notes.push(`Uncertainties in processed values found by the max–min method.`);
+    return { head: [cols.map(c => ({ text: c.h }))], body, rows: D.rowsOut, notes };
+  }
+  function renderProcessedTable(D) {
+    const M = processedModel(D);
+    let h = '<table class="dt pt"><thead><tr>' + M.head[0].map(c => `<th>${H(c.text)}</th>`).join('') + '</tr></thead><tbody>';
+    if (!M.body.length) h += `<tr><td colspan="${M.head[0].length}" class="note">No complete rows yet.</td></tr>`;
+    M.body.forEach((r, k) => h += `<tr${M.rows[k].ex ? ' class="ex"' : ''}>` + r.map((c, j) => `<td>${H(c)}${j === 0 && M.rows[k].ex ? '*' : ''}</td>`).join('') + '</tr>');
+    h += '</tbody></table>';
+    if (M.notes.length) h += `<div style="padding:6px 10px">${M.notes.map(n => `<p class="note">${n}</p>`).join('')}</div>`;
+    $('#tableHost').innerHTML = h;
+  }
+
+  /* ---------------- graph ---------------- */
+  let LAST = null, GEO = null, LASTSVG = '';
+  function viewModel(D) {
+    const legend = [];
+    if (D.points.length) legend.push({ kind: 'point', text: 'data' });
+    if (D.nEx) legend.push({ kind: 'excluded', text: 'excluded from fit' });
+    if (D.fit) {
+      legend.push({ kind: 'fit', text: eqMarkup(D, D.fit.p) });
+      if (D.fit.r2 !== null && D.fit.id !== 'proportional') legend.push({ kind: 'none', text: `R^{2} = ${D.fit.r2.toFixed(4)}` });
+    }
+    if (D.maxmin) {
+      legend.push({ kind: 'max', dash: '10 6', text: `max: ${eqMarkup(D, [D.maxmin.max.m, D.maxmin.max.c], 'linear')}` });
+      legend.push({ kind: 'min', dash: '3 5', text: `min: ${eqMarkup(D, [D.maxmin.min.m, D.maxmin.min.c], 'linear')}` });
+    }
+    if (D.tangent) legend.push({ kind: 'tan', text: `tangent at ${D.ax.symT} = ${sfm(D.tangent.x, D)}: gradient ${sfm(D.tangent.m, D)}` });
+    const num = s => { const p = parseNum(s); return p.ok ? p.value : NaN; };
+    return {
+      points: D.blocked ? [] : D.points, fit: D.fit, maxmin: D.maxmin, tangent: D.tangent,
+      title: S.showTitle ? S.title.trim() : '', residuals: S.residuals,
+      xAxis: { prefix: D.ax.prefix, unitMarkup: D.ax.unitMarkup }, yAxis: { prefix: D.ay.prefix, unitMarkup: D.ay.unitMarkup },
+      axes: { manual: S.scale === 'manual', origin: S.origin, xmin: num(S.axes.xmin), xmax: num(S.axes.xmax), ymin: num(S.axes.ymin), ymax: num(S.axes.ymax), xstep: num(S.axes.xstep), ystep: num(S.axes.ystep) },
+      grid: S.grid, box: S.box, legend: D.blocked ? [] : legend, blocked: D.blocked, notes: [],
+      barNotes: (b) => {
+        const out = [];
+        const one = (bb, a) => {
+          if (!bb.tot) return;
+          const name = a.symRaw;
+          if (bb.zero === bb.tot) out.push(`No uncertainty was entered for ${name}.`);
+          else if (bb.vis === 0) out.push(`Uncertainty bars for ${a.symT} are too small to be seen at this scale.`);
+          else if (bb.vis + bb.zero < bb.tot) out.push(`Some uncertainty bars for ${a.symT} are too small to be seen at this scale.`);
+        };
+        if (!D.blocked) { one(b.x, D.ax); one(b.y, D.ay); }
+        return out;
+      },
+    };
+  }
+  function renderGraph(D) {
+    const r = GR.graph(viewModel(D));
+    LASTSVG = r.svg; GEO = r.geo;
+    $('#graphHost').innerHTML = r.svg;
+    // keep manual inputs useful: prefill with the current automatic range
+    if (S.scale === 'auto') {
+      const f = v => String(+v.toPrecision(6));
+      $('[data-ax=xmin]').placeholder = f(GEO.X.lo); $('[data-ax=xmax]').placeholder = f(GEO.X.hi);
+      $('[data-ax=ymin]').placeholder = f(GEO.Y.lo); $('[data-ax=ymax]').placeholder = f(GEO.Y.hi);
+    }
+  }
+
+  /* ---------------- analysis ---------------- */
+  let RESULTS = [];
+  function renderAnalysis(D) {
+    RESULTS = [];
+    const out = [], add = (label, markup) => RESULTS.push({ label, markup });
+    const ax = D.ax, ay = D.ay;
+    if (D.blocked) out.push(`<p class="warn">Fix the precision problems in the data table first (or turn off strict precision).</p>`);
+    else if (S.fit === 'none') out.push(`<p class="note">Choose a fit model above the graph.</p>`);
+    else if (D.fitErr) out.push(`<p class="warn">${GR.esc(D.fitErr)}</p>`);
+    else if (D.fit) {
+      const M = MODELS[D.fit.id], units = M.units(ax.unitT, ay.unitT, D.fit.p);
+      const eq = eqMarkup(D, D.fit.p);
+      out.push(`<div class="eq">${H(eq)}</div>`); add('Best fit', eq);
+      if (D.fit.r2 !== null) {
+        const r2 = `R^{2} = ${D.fit.r2.toFixed(4)}`;
+        out.push(`<p class="res">${H(r2)} <span class="note">· ${D.nUsed} points${D.nEx ? `, ${D.nEx} excluded` : ''}</span></p>`); add('', r2);
+        if (D.fit.id === 'proportional') out.push(`<p class="note">For a line forced through the origin, R² compares against the mean and can be misleading. Compare with a linear fit: is the intercept zero within its uncertainty?</p>`);
+      }
+      if (D.fit.exact) out.push(`<p class="warn">There are only as many points as parameters, so the curve passes through every point exactly and R² means nothing.</p>`);
+      const names = { linear: ['gradient m', 'y-intercept c'], proportional: ['gradient k', ''], quadratic: ['a', 'b', 'c'], power: ['a', 'exponent n'], exponential: ['A', 'k'], log: ['a', 'b'] }[D.fit.id];
+      if (D.maxmin) {
+        const mm = D.maxmin, dm = Math.abs(mm.max.m - mm.min.m) / 2, dc = Math.abs(mm.max.c - mm.min.c) / 2;
+        const fm = fmtValUnc(D.fit.p[0], dm, S.sfU), fc = fmtValUnc(D.fit.p[1], dc, S.sfU);
+        const um = unitSpan(units[0]), uc = unitSpan(units[1]);
+        const wrapU = (f, u) => u && !f.exp ? `(${f.markup})${u}` : `${f.markup}${u}`;
+        const lm = `m = ${wrapU(fm, um)}`, lc = `c = ${wrapU(fc, uc)}`;
+        out.push(`<p class="res"><b>Gradient</b> <span class="v">${H(lm)}</span></p>`); add('Gradient', lm);
+        out.push(`<p class="res"><b>y-intercept</b> <span class="v">${H(lc)}</span></p>`); add('y-intercept', lc);
+        const pm = Math.abs(dm / D.fit.p[0]) * 100;
+        if (isFinite(pm)) { const t = `${pm < 10 ? pm.toFixed(1) : pm.toFixed(0)} %`; out.push(`<p class="res"><b>% uncertainty in gradient</b> <span class="v">${t}</span></p>`); add('% uncertainty in gradient', t); }
+        const emax = eqMarkup(D, [mm.max.m, mm.max.c], 'linear'), emin = eqMarkup(D, [mm.min.m, mm.min.c], 'linear');
+        out.push(`<div class="eq mm">max: ${H(emax)}<br>min: ${H(emin)}</div>`); add('Max line', emax); add('Min line', emin);
+        out.push(`<p class="note">Δm = (m<sub>max</sub> − m<sub>min</sub>) / 2 and Δc = |c<sub>max</sub> − c<sub>min</sub>| / 2.</p>`);
+        if (mm.warn) out.push(`<p class="warn">${mm.warn}</p>`);
+      } else {
+        D.fit.p.forEach((v, k) => {
+          if (!names[k]) return;
+          const t = `${names[k].split(' ').pop()} = ${sfm(v, D)}${unitSpan(units[k])}`;
+          out.push(`<p class="res"><b>${names[k].split(' ').slice(0, -1).join(' ') || ''}</b> <span class="v">${H(t)}</span></p>`); add(names[k], t);
+        });
+        if (D.fit.id === 'linear' && S.maxmin && D.mmErr) out.push(`<p class="note">${GR.esc(D.mmErr)}</p>`);
+        else if (D.fit.id !== 'linear') out.push(`<p class="note">Max/min lines need a linear fit. Use “Plot x as / Plot y as” to straighten the data first.</p>`);
+      }
+    }
+    $('#fitOut').innerHTML = out.join('');
+
+    // tangent
+    $('#tanLbl').innerHTML = `at ${H(ax.symT)} =`;
+    let t = '';
+    if (D.tangent) {
+      const gu = unitSpan(GM.unitMul(ay.unitT, GM.unitPow(ax.unitT, -1)));
+      const s1 = `gradient = ${sfm(D.tangent.m, D)}${gu}`, s2 = `point (${sfm(D.tangent.x, D)}, ${sfm(D.tangent.y, D)})`;
+      t = `<p class="res"><b>Tangent</b> <span class="v">${H(s1)}</span></p><p class="note">${H(s2)} · ${H(`${ay.symT} = ${sfm(D.tangent.m, D)} ${ax.symT}${D.tangent.y - D.tangent.m * D.tangent.x < 0 ? ' − ' : ' + '}${sfm(Math.abs(D.tangent.y - D.tangent.m * D.tangent.x), D)}`)}</p>`;
+      add(`Tangent at ${P(ax.symT)} = ${P(sfm(D.tangent.x, D))}`, s1);
+    } else if (!D.fit) t = `<p class="note">Fit a curve first.</p>`;
+    else t = `<p class="note">Type a value, or pick the Tangent tool and click the graph.</p>`;
+    $('#tanOut').innerHTML = t;
+
+    // readouts
+    $('#ixLbl').innerHTML = `${H(ay.symT)} at ${H(ax.symT)} =`;
+    $('#iyLbl').innerHTML = `${H(ax.symT)} at ${H(ay.symT)} =`;
+    let ints = '';
+    if (D.fit) {
+      const f = D.fit.f, ux = unitSpan(ax.unitT), uy = unitSpan(ay.unitT);
+      const y0 = f(0);
+      if (isFinite(y0)) {
+        let s = `${ay.symT} = ${sfm(y0, D)}${uy}`;
+        if (D.maxmin) { const dc = Math.abs(D.maxmin.max.c - D.maxmin.min.c) / 2, fv = fmtValUnc(y0, dc, S.sfU); s = `${ay.symT} = ${fv.markup}${uy}`; }
+        ints += `<p class="res"><b>y-intercept</b> <span class="v">${H(s)}</span></p>`; add('y-intercept', s);
+      }
+      const roots = xRoots(D, 0);
+      if (roots.length) {
+        let s;
+        if (D.fit.id === 'linear' && D.maxmin && roots.length === 1) {
+          const a = -D.maxmin.max.c / D.maxmin.max.m, b = -D.maxmin.min.c / D.maxmin.min.m;
+          const fv = fmtValUnc(roots[0], Math.abs(a - b) / 2, S.sfU);
+          s = `${ax.symT} = ${fv.markup}${ux}`;
+        } else s = roots.map(r => `${ax.symT} = ${sfm(r, D)}${ux}`).join(';  ');
+        ints += `<p class="res"><b>x-intercept</b> <span class="v">${H(s)}</span></p>`; add('x-intercept', s);
+      }
+    }
+    $('#intOut').innerHTML = ints;
+    const ix = parseNum(S.interpX), iy = parseNum(S.interpY);
+    let a = '', b = '';
+    if (D.fit && ix.ok) { const v = D.fit.f(ix.value); a = isFinite(v) ? `<p class="res v">${H(`${ay.symT} = ${sfm(v, D)}${unitSpan(ay.unitT)}`)}</p>` : `<p class="note">Outside the domain of the fit.</p>`; }
+    if (D.fit && iy.ok) { const rs = xRoots(D, iy.value); b = rs.length ? `<p class="res v">${H(rs.map(r => `${ax.symT} = ${sfm(r, D)}${unitSpan(ax.unitT)}`).join(';  '))}</p>` : `<p class="note">The fit never reaches that value on the graph.</p>`; }
+    $('#ixOut').innerHTML = a; $('#iyOut').innerHTML = b;
+
+    // literature comparison
+    const qs = [];
+    if (D.fit) {
+      const M = MODELS[D.fit.id], units = M.units(ax.unitT, ay.unitT, D.fit.p);
+      const lbls = { linear: ['gradient m', 'y-intercept c'], proportional: ['gradient k'], quadratic: ['a', 'b', 'c'], power: ['a', 'exponent n'], exponential: ['A', 'k'], log: ['a', 'b'] }[D.fit.id];
+      D.fit.p.forEach((v, k) => {
+        let lo = null, hi = null, unc = null;
+        if (D.maxmin && k < 2) { const L = [D.maxmin.max, D.maxmin.min].map(l => k ? l.c : l.m); lo = Math.min(...L); hi = Math.max(...L); unc = (hi - lo) / 2; }
+        qs.push({ id: `p${k}`, label: lbls[k], v, unit: units[k], lo, hi, unc });
+      });
+    }
+    if (D.tangent) qs.push({ id: 'tan', label: 'tangent gradient', v: D.tangent.m, unit: GM.unitMul(ay.unitT, GM.unitPow(ax.unitT, -1)) });
+    const sel = $('#litQty'), want = S.litQty;
+    sel.innerHTML = qs.length ? qs.map(q => `<option value="${q.id}">${GR.esc(q.label)}</option>`).join('') : '<option value="">(fit a model first)</option>';
+    if (qs.some(q => q.id === want)) sel.value = want; else if (qs.length) { sel.value = qs[0].id; }
+    const q = qs.find(q => q.id === sel.value), lit = parseNum(S.litVal);
+    let lo = '';
+    if (q) {
+      const um = fmtUnit(q.unit);
+      $('#litVal').placeholder = um ? `in ${P(um)}` : '';
+      if (lit.ok && lit.value !== 0) {
+        const diff = Math.abs(q.v - lit.value) / Math.abs(lit.value) * 100;
+        const ds = `${diff < 10 ? diff.toFixed(1) : diff.toFixed(0)} %`;
+        lo += `<p class="res"><b>Experimental</b> <span class="v">${H(q.unc ? fmtValUnc(q.v, q.unc, S.sfU).markup : sfm(q.v, D))}${H(um ? ' ' + um : '')}</span></p>`;
+        lo += `<p class="res"><b>Percentage difference</b> <span class="v">${ds}</span></p>`;
+        add(`Percentage difference from literature (${q.label})`, ds);
+        if (q.lo !== null) {
+          const inside = lit.value >= q.lo && lit.value <= q.hi;
+          const pu = Math.abs(q.unc / q.v) * 100;
+          lo += `<p class="res">${inside ? '<span class="pill ok">within uncertainty</span>' : '<span class="pill no">outside uncertainty</span>'}</p>`;
+          lo += `<p class="note">The max/min lines give ${H(sfm(q.lo, D))} to ${H(sfm(q.hi, D))}. Percentage uncertainty ${pu < 10 ? pu.toFixed(1) : pu.toFixed(0)} % against a ${ds} difference${inside ? '.' : ': the difference is bigger than the random uncertainty can explain, which points to a systematic error.'}</p>`;
+        }
+      } else if (S.litVal.trim()) lo = `<p class="note">Enter a non-zero number.</p>`;
+    }
+    $('#litOut').innerHTML = lo;
+  }
+  function xRoots(D, target) {
+    const f = D.fit.f, id = D.fit.id, p = D.fit.p;
+    if (id === 'linear') return p[0] ? [(target - p[1]) / p[0]] : [];
+    if (id === 'proportional') return p[0] ? [target / p[0]] : [];
+    const lo = GEO ? GEO.X.lo : 0, hi = GEO ? GEO.X.hi : 1, span = hi - lo, a = lo - span, b = hi + span, N = 2000, out = [];
+    let px = a, pv = f(a) - target;
+    for (let k = 1; k <= N; k++) {
+      const x = a + (b - a) * k / N, v = f(x) - target;
+      if (isFinite(v) && isFinite(pv) && (v === 0 || Math.sign(v) !== Math.sign(pv))) {
+        let l = px, r = x, fl = pv;
+        for (let it = 0; it < 80; it++) { const m = (l + r) / 2, fm = f(m) - target; if (Math.sign(fm) === Math.sign(fl)) { l = m; fl = fm; } else r = m; }
+        const root = (l + r) / 2;
+        if (!out.some(o => Math.abs(o - root) < span * 1e-6)) out.push(root);
+      }
+      px = x; pv = v;
+    }
+    return out.slice(0, 3);
+  }
+
+  /* ---------------- issues ---------------- */
+  function renderIssues(D) {
+    const li = [];
+    D.issues.slice(0, 6).forEach(i => li.push(`<li>${i.msg}</li>`));
+    if (D.issues.length > 6) li.push(`<li>…and ${D.issues.length - 6} more highlighted in the table.</li>`);
+    D.infos.slice(0, 4).forEach(i => li.push(`<li class="info">${GR.esc(i)}</li>`));
+    $('#issues').innerHTML = li.join('');
+  }
+
+  /* ---------------- update cycle ---------------- */
+  let raf = 0;
+  function update() { cancelAnimationFrame(raf); raf = requestAnimationFrame(run); }
+  function run() {
+    const D = compute(); LAST = D;
+    renderGraph(D); renderAnalysis(D); renderIssues(D);
+    if (S.tab === 'raw') decorateTable(); else renderProcessedTable(D);
+    syncControls();
+    save();
+  }
+  function syncControls() {
+    const mmOk = S.fit === 'linear';
+    $('#maxmin').disabled = !mmOk; $('#maxmin').closest('.tog').classList.toggle('disabled', !mmOk);
+    $('#maxmin').closest('.tog').title = mmOk ? 'Steepest and shallowest straight lines through every error bar' : 'Max/min lines need a linear fit';
+    $('#residuals').disabled = S.fit === 'none'; $('#residuals').closest('.tog').classList.toggle('disabled', S.fit === 'none');
+    $('.manual').classList.toggle('off', S.scale !== 'manual');
+    const sfSel = $('#sf'); sfSel.options[0].text = `Match the data (${LAST ? LAST.sfAuto : 3})`;
+    // linearise option labels use the actual symbols
+    for (const [id, q] of [['#linX', S.x], ['#linY', S.y]]) {
+      const sel = $(id), sym = q.sym.trim() || (q === S.x ? 'x' : 'y'), cur = sel.value;
+      const opts = Object.entries(TRANSFORMS).map(([k, T]) => `<option value="${k}">${GR.esc(P(k === 'none' ? sym : T.log ? `${T.log} ${sym}` : T.sym(sym)))}</option>`).join('');
+      if (sel.dataset.sym !== sym) { sel.innerHTML = opts; sel.dataset.sym = sym; sel.value = cur || 'none'; }
+    }
+    $('#linX').value = S.linX; $('#linY').value = S.linY;
+    const hint = { exclude: 'Click a point to exclude it from the fit; click again to bring it back.', tangent: 'Click anywhere on the graph to draw the tangent at that x value.' }[S.tool];
+    $('#toolHint').textContent = hint;
+  }
+
+  /* ---------------- bind controls ---------------- */
+  function loadIntoUI() {
+    $('#title').value = S.title;
+    for (const ax of ['x', 'y']) $$(`.qcard[data-axis="${ax}"] [data-q]`).forEach(el => el.value = S[ax][el.dataset.q]);
+    $('#trials').value = String(S.trials);
+    $('#strict').checked = S.strict; $('#perPoint').checked = S.perPoint;
+    $('#fit').value = S.fit; $('#maxmin').checked = S.maxmin; $('#residuals').checked = S.residuals;
+    $$('.seg button').forEach(b => b.classList.toggle('on', b.dataset.tool === S.tool));
+    $('#graphHost').dataset.tool = S.tool;
+    $$('input[name=scale]').forEach(r => r.checked = r.value === S.scale);
+    $$('[data-ax]').forEach(el => el.value = S.axes[el.dataset.ax]);
+    $('#origin').checked = S.origin; $('#grid').value = S.grid; $('#box').value = S.box; $('#showTitle').checked = S.showTitle;
+    $('#sf').value = String(S.sf); $('#sfU').value = String(S.sfU);
+    $('#tanX').value = S.tanX; $('#interpX').value = S.interpX; $('#interpY').value = S.interpY; $('#litVal').value = S.litVal;
+    $$('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+    $('#rawActions').hidden = S.tab !== 'raw';
+    $('#linX').dataset.sym = ''; $('#linY').dataset.sym = '';
+    syncControls();
+    if (S.tab === 'raw') renderRawTable();
+    update();
+  }
+  function bind() {
+    $('#title').addEventListener('input', e => { S.title = e.target.value; update(); });
+    for (const ax of ['x', 'y']) $$(`.qcard[data-axis="${ax}"] [data-q]`).forEach(el => {
+      el.addEventListener('input', () => { S[ax][el.dataset.q] = el.value; if (S.tab === 'raw') refreshHead(); update(); });
+    });
+    $('#trials').addEventListener('change', e => { S.trials = +e.target.value; if (S.tab === 'raw') renderRawTable(); update(); });
+    $('#strict').addEventListener('change', e => { S.strict = e.target.checked; update(); });
+    $('#perPoint').addEventListener('change', e => { S.perPoint = e.target.checked; if (S.tab === 'raw') renderRawTable(); update(); });
+    $('#fit').addEventListener('change', e => { S.fit = e.target.value; update(); });
+    $('#linX').addEventListener('change', e => { S.linX = e.target.value; S.tanX = ''; $('#tanX').value = ''; update(); });
+    $('#linY').addEventListener('change', e => { S.linY = e.target.value; S.tanX = ''; $('#tanX').value = ''; update(); });
+    $('#maxmin').addEventListener('change', e => { S.maxmin = e.target.checked; update(); });
+    $('#residuals').addEventListener('change', e => { S.residuals = e.target.checked; update(); });
+    $$('.seg button').forEach(b => b.addEventListener('click', () => {
+      S.tool = b.dataset.tool; $$('.seg button').forEach(x => x.classList.toggle('on', x === b)); $('#graphHost').dataset.tool = S.tool; syncControls(); save();
+    }));
+    $$('input[name=scale]').forEach(r => r.addEventListener('change', () => {
+      S.scale = r.value;
+      if (S.scale === 'manual' && GEO) {
+        const f = v => String(+v.toPrecision(6));
+        const fill = { xmin: GEO.X.lo, xmax: GEO.X.hi, ymin: GEO.Y.lo, ymax: GEO.Y.hi };
+        for (const k in fill) if (!S.axes[k]) { S.axes[k] = f(fill[k]); $(`[data-ax=${k}]`).value = S.axes[k]; }
+      }
+      update();
+    }));
+    $$('[data-ax]').forEach(el => el.addEventListener('input', () => { S.axes[el.dataset.ax] = el.value; update(); }));
+    $('#origin').addEventListener('change', e => { S.origin = e.target.checked; update(); });
+    $('#grid').addEventListener('change', e => { S.grid = e.target.value; update(); });
+    $('#box').addEventListener('change', e => { S.box = e.target.value; update(); });
+    $('#showTitle').addEventListener('change', e => { S.showTitle = e.target.checked; update(); });
+    $('#sf').addEventListener('change', e => { S.sf = e.target.value; update(); });
+    $('#sfU').addEventListener('change', e => { S.sfU = +e.target.value; update(); });
+    for (const k of ['tanX', 'interpX', 'interpY', 'litVal']) $('#' + k).addEventListener('input', e => { S[k] = e.target.value; update(); });
+    $('#litQty').addEventListener('change', e => { S.litQty = e.target.value; update(); });
+    $$('.tabs button').forEach(b => b.addEventListener('click', () => {
+      S.tab = b.dataset.tab; $$('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+      $('#rawActions').hidden = S.tab !== 'raw';
+      if (S.tab === 'raw') renderRawTable(); else renderProcessedTable(LAST || compute());
+      save();
+    }));
+
+    // table editing
+    const host = $('#tableHost');
+    host.addEventListener('input', e => {
+      const t = e.target; if (!t.dataset.k) return;
+      setCell(+t.dataset.r, t.dataset.k, t.value); ensureSpareRow(); update();
+    });
+    host.addEventListener('click', e => {
+      const b = e.target.closest('button[data-act]'); if (!b) return;
+      const i = +b.dataset.r;
+      if (b.dataset.act === 'ex') { S.rows[i].ex = !S.rows[i].ex; update(); }
+      if (b.dataset.act === 'del') { S.rows.splice(i, 1); if (!S.rows.length) S.rows.push(blankRow()); renderRawTable(); update(); }
+    });
+    host.addEventListener('keydown', e => {
+      const t = e.target; if (!t.dataset || !t.dataset.k) return;
+      const i = +t.dataset.r, k = t.dataset.k, keys = cellKeys(), ci = keys.indexOf(k);
+      if (e.key === 'Enter' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (i + 1 >= S.rows.length) { S.rows.push(blankRow()); $('#tableHost tbody').insertAdjacentHTML('beforeend', rowHTML(S.rows[i + 1], i + 1)); decorateTable(); }
+        focusCell(i + 1, k);
+      } else if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); focusCell(i - 1, k); }
+      else if (e.key === 'ArrowRight' && t.selectionStart === t.value.length && ci < keys.length - 1) { e.preventDefault(); focusCell(i, keys[ci + 1]); }
+      else if (e.key === 'ArrowLeft' && t.selectionEnd === 0 && ci > 0) { e.preventDefault(); focusCell(i, keys[ci - 1]); }
+    });
+    host.addEventListener('paste', e => {
+      const t = e.target; if (!t.dataset || !t.dataset.k) return;
+      const txt = (e.clipboardData || window.clipboardData).getData('text');
+      if (!/[\t\n]/.test(txt.trim())) return;
+      e.preventDefault();
+      const lines = txt.replace(/\r/g, '').split('\n').filter((l, k, a) => l.trim() || k < a.length - 1).filter(l => l.length);
+      const keys = cellKeys(), c0 = keys.indexOf(t.dataset.k), r0 = +t.dataset.r;
+      lines.forEach((line, li) => {
+        const cells = line.split(/\t|;(?=\s*[-\d.,])/);
+        while (S.rows.length <= r0 + li) S.rows.push(blankRow());
+        cells.forEach((v, cj) => { const k = keys[c0 + cj]; if (k) setCell(r0 + li, k, v.trim()); });
+      });
+      S.rows.push(blankRow());
+      renderRawTable(); update();
+      toast(`Pasted ${lines.length} row${lines.length === 1 ? '' : 's'}.`);
+    });
+    $('#btnAddRow').addEventListener('click', () => { S.rows.push(blankRow()); renderRawTable(); focusCell(S.rows.length - 1, 'x'); });
+    $('#btnClearData').addEventListener('click', () => {
+      if (!confirm('Clear every value in the data table? Headings and settings stay.')) return;
+      S.rows = Array.from({ length: 8 }, blankRow); renderRawTable(); update();
+    });
+
+    // graph interaction
+    const gh = $('#graphHost'), tip = $('#tip');
+    const toSvg = (e) => {
+      const svg = $('svg', gh); if (!svg) return null;
+      const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
+      return { x: (e.clientX - r.left) / r.width * vb.width, y: (e.clientY - r.top) / r.height * vb.height, r, k: r.width / vb.width };
+    };
+    const nearest = (p) => {
+      if (!GEO || !p) return null;
+      let best = null, bd = 16 / Math.max(p.k, 0.3);
+      for (const g of GEO.pts) { const d = Math.hypot(g.px - p.x, g.py - p.y); if (d < bd) { bd = d; best = g; } }
+      return best;
+    };
+    gh.addEventListener('click', e => {
+      const p = toSvg(e); if (!p || !LAST || LAST.blocked) return;
+      if (S.tool === 'exclude') {
+        const n = nearest(p); if (!n) return;
+        S.rows[n.i].ex = !S.rows[n.i].ex; update();
+        toast(S.rows[n.i].ex ? `Row ${n.i + 1} excluded from the fit.` : `Row ${n.i + 1} back in the fit.`);
+      } else if (S.tool === 'tangent') {
+        if (!LAST.fit) { toast('Choose a fit model first.'); return; }
+        if (p.x < GEO.mL || p.x > GEO.mL + GEO.pw || p.y < GEO.mT || p.y > GEO.mT + GEO.plotH) return;
+        const x = GEO.invX(p.x);
+        S.tanX = fmtSF(x, LAST.sf + 1).replace(/−/g, '-').replace(/×10\^\{(.*)\}/, (m, e) => 'e' + e.replace('−', '-'));
+        $('#tanX').value = S.tanX; update();
+      }
+    });
+    gh.addEventListener('mousemove', e => {
+      const p = toSvg(e); const n = nearest(p);
+      gh.classList.toggle('near', !!n && S.tool === 'exclude');
+      if (!n || !LAST) { tip.hidden = true; return; }
+      const pt = LAST.points.find(q => q.row === n.i); if (!pt) { tip.hidden = true; return; }
+      const D = LAST;
+      tip.innerHTML = `row ${n.i + 1}: ${H(D.ax.symT)} = ${H(fmtSF(pt.x, D.sf))}, ${H(D.ay.symT)} = ${H(fmtSF(pt.y, D.sf))}${pt.excluded ? ' (excluded)' : ''}`;
+      const wrap = gh.getBoundingClientRect();
+      tip.style.left = (n.px * p.k) + 'px'; tip.style.top = (n.py * p.k) + 'px'; tip.hidden = false;
+    });
+    gh.addEventListener('mouseleave', () => { tip.hidden = true; gh.classList.remove('near'); });
+
+    // exports
+    $('#btnPNG').addEventListener('click', () => svgToPng(LASTSVG, 3).then(b => download(b, fileBase() + '.png')).catch(() => toast('Could not make the image.')));
+    $('#btnSVG').addEventListener('click', () => download(new Blob([LASTSVG], { type: 'image/svg+xml' }), fileBase() + '.svg'));
+    $('#btnCopyImg').addEventListener('click', () => copyImage(LASTSVG));
+    $('#btnCopyTable').addEventListener('click', copyTable);
+    $('#btnTableCSV').addEventListener('click', () => { const m = tableModel(); download(new Blob(['﻿' + toCSV(m)], { type: 'text/csv' }), fileBase() + (S.tab === 'raw' ? '-raw-data' : '-processed-data') + '.csv'); });
+    $('#btnTablePNG').addEventListener('click', () => { const m = tableModel(); const t = GR.tableSVG(m.head, m.body, m.caption); svgToPng(t.svg, 2).then(b => download(b, fileBase() + (S.tab === 'raw' ? '-raw-data' : '-processed-data') + '.png')); });
+    $('#btnCopyResults').addEventListener('click', () => {
+      const lines = RESULTS.map(r => (r.label ? r.label + ': ' : '') + P(r.markup));
+      if (!lines.length) { toast('Nothing to copy yet.'); return; }
+      copyText(lines.join('\n')).then(() => toast('Results copied.'));
+    });
+
+    // file actions
+    $('#btnNew').addEventListener('click', () => { if (!confirm('Start a new graph? Unsaved changes to this one will be lost.')) return; S = defaultState(); history.replaceState(null, '', location.pathname + location.search); loadIntoUI(); });
+    $('#btnExample').addEventListener('click', () => { if (!confirm('Load the pendulum example? This replaces the current graph.')) return; S = exampleState(); loadIntoUI(); });
+    $('#btnSave').addEventListener('click', () => download(new Blob([JSON.stringify({ app: 'graph-lab', ...S }, null, 1)], { type: 'application/json' }), fileBase() + '.graphlab.json'));
+    $('#btnOpen').addEventListener('click', () => $('#fileOpen').click());
+    $('#fileOpen').addEventListener('change', async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try { S = normalise(JSON.parse(await f.text())); loadIntoUI(); toast(`Opened ${f.name}`); } catch (err) { toast('That file is not a Strothoff Graphical Laboratories file.'); }
+      e.target.value = '';
+    });
+    $('#btnShare').addEventListener('click', async () => {
+      const url = await shareURL();
+      $('#shareUrl').value = url; $('#shareDlg').showModal(); $('#shareUrl').select();
+    });
+    $('#btnCopyLink').addEventListener('click', () => copyText($('#shareUrl').value).then(() => toast('Link copied.')));
+  }
+  function refreshHead() { renderRawTableHeadOnly(); }
+  function renderRawTableHeadOnly() {
+    const host = $('#tableHost'), old = $('thead', host); if (!old) return;
+    const nT = S.trials, pp = S.perPoint, two = nT > 1 || pp;
+    const hx = H(headingMarkup(S.x)), hy = H(headingMarkup(S.y)), ux = uncMarkup(S.x), uy = uncMarkup(S.y);
+    const ths = $$('tr:first-child th', old);
+    if (ths[1]) ths[1].innerHTML = `${hx}${!pp && ux ? `<span class="unc">${H(ux)}</span>` : ''}`;
+    if (ths[2]) ths[2].innerHTML = `${hy}${!pp && uy ? `<span class="unc">${H(uy)}</span>` : ''}`;
+    setH1();
+  }
+
+  /* ---------------- tables for export ---------------- */
+  function tableModel() {
+    const D = LAST || compute();
+    if (S.tab !== 'raw') {
+      const M = processedModel(D);
+      return { head: M.head, body: M.body.map((r, k) => r.map((c, j) => j === 0 && M.rows[k].ex ? c + '*' : c)), caption: S.title.trim() ? `${S.title.trim()}: processed data` : '' };
+    }
+    const nT = S.trials, pp = S.perPoint;
+    const hx = headingMarkup(S.x), hy = headingMarkup(S.y), ux = uncMarkup(S.x), uy = uncMarkup(S.y);
+    const head = [], body = [];
+    const two = nT > 1 || pp;
+    const xh = pp ? hx : (ux ? `${hx} ${ux}` : hx), yh = pp ? hy : (uy ? `${hy} ${uy}` : hy);
+    head.push([{ text: xh, span: pp ? 2 : 1 }, { text: yh, span: nT + (pp ? 1 : 0) }]);
+    if (two) {
+      const r = [];
+      if (pp) r.push({ text: 'value' }, { text: '± abs' }); else r.push({ text: '' });
+      for (let k = 0; k < nT; k++) r.push({ text: nT > 1 ? `trial ${k + 1}` : 'value' });
+      if (pp) r.push({ text: '± abs' });
+      head.push(r);
+    }
+    S.rows.forEach(rw => {
+      if (!rw.x.trim() && !rw.y.slice(0, nT).some(v => v.trim())) return;
+      const r = [rw.x.trim()];
+      if (pp) r.push(rw.dx.trim());
+      for (let k = 0; k < nT; k++) r.push(rw.y[k].trim().replace(/^-/, '−'));
+      if (pp) r.push(rw.dy.trim());
+      body.push(r.map(v => v.replace(/^-/, '−')));
+    });
+    return { head, body, caption: S.title.trim() ? `${S.title.trim()}: raw data` : '' };
+  }
+  function toCSV(m) {
+    const cols = Math.max(...m.body.map(r => r.length), 1);
+    const names = Array(cols).fill('');
+    let c = 0;
+    m.head[0].forEach(h => { for (let k = 0; k < (h.span || 1); k++) names[c + k] = P(h.text); c += h.span || 1; });
+    if (m.head[1]) m.head[1].forEach((h, k) => { if (h.text) names[k] = `${names[k]} ${P(h.text)}`.trim(); });
+    const q = v => /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    return [names.map(q).join(','), ...m.body.map(r => r.map(v => q(P(v).replace(/−/g, '-'))).join(','))].join('\r\n');
+  }
+  function toHTMLTable(m) {
+    const td = 'border:1px solid #000;padding:3pt 7pt;text-align:center;font-family:Arial,sans-serif;font-size:11pt';
+    let h = `<table style="border-collapse:collapse">`;
+    if (m.caption) h += `<caption style="font-family:Arial,sans-serif;font-size:11pt;font-weight:bold;text-align:left;padding-bottom:4pt">${GR.esc(m.caption)}</caption>`;
+    h += '<thead>';
+    m.head.forEach(r => h += '<tr>' + r.map(c => `<th colspan="${c.span || 1}" style="${td};font-weight:bold">${H(c.text)}</th>`).join('') + '</tr>');
+    h += '</thead><tbody>';
+    m.body.forEach(r => h += '<tr>' + r.map(c => `<td style="${td}">${H(c)}</td>`).join('') + '</tr>');
+    return h + '</tbody></table>';
+  }
+  async function copyTable() {
+    const m = tableModel();
+    const html = toHTMLTable(m), plain = toCSV(m).replace(/,/g, '\t');
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([plain], { type: 'text/plain' }) })]);
+      toast('Table copied. Paste it into your report.');
+    } catch (e) {
+      const div = document.createElement('div'); div.innerHTML = html; div.style.position = 'fixed'; div.style.left = '-9999px'; document.body.appendChild(div);
+      const r = document.createRange(); r.selectNodeContents(div); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      const ok = document.execCommand('copy'); sel.removeAllRanges(); div.remove();
+      toast(ok ? 'Table copied. Paste it into your report.' : 'Copy failed: use CSV or PNG instead.');
+    }
+  }
+
+  /* ---------------- export helpers ---------------- */
+  const fileBase = () => (S.title.trim() || 'graph').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'graph';
+  function download(blob, name) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  function svgToPng(svg, scale) {
+    return new Promise((res, rej) => {
+      const m = svg.match(/viewBox="0 0 ([\d.]+) ([\d.]+)"/), w = +m[1], h = +m[2];
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png');
+      };
+      img.onerror = rej;
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  }
+  async function copyImage(svg) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': svgToPng(svg, 2) })]);
+      toast('Graph copied. Paste it into your report.');
+    } catch (e) { toast('This browser cannot copy images: use Download PNG.'); }
+  }
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); }
+    catch (e) { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  }
+  let toastT = 0;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2400); }
+
+  /* ---------------- save / share ---------------- */
+  let saveT = 0;
+  function save() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) { } }, 300); }
+  const b64u = bytes => { let s = ''; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64u = str => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+  function compact() {
+    // drop empty rows and unused trial cells to keep links short
+    const c = JSON.parse(JSON.stringify(S));
+    c.rows = c.rows.filter(r => r.x.trim() || r.y.some(v => v.trim()) || r.dx || r.dy).map(r => {
+      const o = { x: r.x, y: r.y.slice(0, c.trials) };
+      if (r.dx) o.dx = r.dx; if (r.dy) o.dy = r.dy; if (r.ex) o.ex = 1; return o;
+    });
+    return c;
+  }
+  async function shareURL() {
+    const json = JSON.stringify(compact()), bytes = new TextEncoder().encode(json);
+    let enc;
+    if (window.CompressionStream) {
+      const cs = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+      enc = 'z' + b64u(new Uint8Array(await new Response(cs).arrayBuffer()));
+    } else enc = 'j' + b64u(bytes);
+    const base = location.href.split('#')[0];
+    return `${base}#g=${enc}`;
+  }
+  async function fromHash() {
+    const m = location.hash.match(/#g=([zj])([A-Za-z0-9_-]+)/);
+    if (!m) return null;
+    try {
+      let bytes = unb64u(m[2]);
+      if (m[1] === 'z') { const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw')); bytes = new Uint8Array(await new Response(ds).arrayBuffer()); }
+      const s = normalise(JSON.parse(new TextDecoder().decode(bytes)));
+      s.rows.push(blankRow());
+      return s;
+    } catch (e) { toast('That share link is damaged.'); return null; }
+  }
+
+  /* ---------------- start ---------------- */
+  const HELPKEY = 'sgl.hideHelp';
+  function openHelp() {
+    let hidden = false; try { hidden = localStorage.getItem(HELPKEY) === '1'; } catch (e) { }
+    $('#helpNever').checked = hidden; $('#helpDlg').showModal(); $('.help-body').scrollTop = 0;
+  }
+  function bindHelp() {
+    const dlg = $('#helpDlg'), close = () => dlg.close();
+    $('#btnHelp').addEventListener('click', openHelp);
+    $('#btnHelpX').addEventListener('click', close);
+    $('#btnHelpGo').addEventListener('click', close);
+    $('#helpNever').addEventListener('change', e => { try { e.target.checked ? localStorage.setItem(HELPKEY, '1') : localStorage.removeItem(HELPKEY); } catch (err) { } });
+    dlg.addEventListener('click', e => { if (e.target === dlg) close(); });
+  }
+  async function start() {
+    bind(); bindHelp();
+    let s = await fromHash();
+    if (!s) { try { const raw = localStorage.getItem(STORE); if (raw) s = normalise(JSON.parse(raw)); } catch (e) { } }
+    S = s || exampleState();
+    loadIntoUI();
+    let hideHelp = false; try { hideHelp = localStorage.getItem(HELPKEY) === '1'; } catch (e) { }
+    if (!hideHelp) openHelp();
+    window.addEventListener('hashchange', async () => { const h = await fromHash(); if (h) { S = h; loadIntoUI(); } });
+    window.GraphLab = { get state() { return S; }, get last() { return LAST; }, set(s) { S = normalise(s); loadIntoUI(); }, shareURL, tableModel, toCSV, toHTMLTable };
+  }
+  start();
+})();
+</script>
+</body>
+</html>
