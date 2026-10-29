@@ -208,6 +208,8 @@ dialog.help:not([open]){display:none}
 .example-tog .ex-note{display:none;font-size:11.5px;color:var(--rust)}
 body.example-on .example-tog .ex-note{display:inline}
 body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
+
+.qcard .field.spread{margin-top:6px}
 </style>
 </head>
 <body>
@@ -256,8 +258,15 @@ body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
       <div class="qgrid unc">
         <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="0.01" inputmode="decimal"></label>
         <label class="field"><span>as</span><select data-q="mode"><option value="abs">absolute</option><option value="pct">percent</option></select></label>
-        <label class="field"><span>Trials</span><select id="trials"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+        <label class="field"><span>Trials</span><select id="trials"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
       </div>
+      <label class="field spread" id="spreadField"><span>Error bars from repeated trials</span>
+        <select id="spread">
+          <option value="range">± half the range (physics, chemistry)</option>
+          <option value="sd">± 1 standard deviation (biology)</option>
+          <option value="se">± 1 standard error of the mean</option>
+        </select>
+      </label>
     </div>
 
     <div class="checks">
@@ -410,7 +419,10 @@ body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
         <li><b>Enter</b> or <b>↓</b> moves down a column. A new row appears whenever you fill the last one.</li>
         <li>You can paste whole columns from a spreadsheet: click the first cell, then paste.</li>
         <li><b>Uncertainty</b> can be absolute (± 0.01) or a percentage (± 2 %). Tick <b>Per-point uncertainties</b> if each row has its own value.</li>
-        <li>With several <b>trials</b>, each point is the mean. Its uncertainty is half the range of the trials, or the instrument uncertainty if that is larger.</li>
+        <li>With several <b>trials</b> (up to 12), each point is the mean. Choose how the error bar is worked out:
+          <b>half the range</b> (the larger of half the range and the instrument uncertainty, usual in physics and chemistry),
+          <b>standard deviation</b> (how spread out the trials are, usual in biology), or
+          <b>standard error</b> (SD / √n, how precisely the mean is known). The graph says which one it shows.</li>
         <li>The <b>○</b> button at the end of a row excludes that point from the fit; <b>×</b> deletes the row.</li>
       </ul>
     </section>
@@ -883,8 +895,11 @@ const GM = (() => {
     const v = values.filter(isNum);
     if (!v.length) return null;
     const mean = v.reduce((a, b) => a + b, 0) / v.length;
-    const half = v.length > 1 ? (Math.max(...v) - Math.min(...v)) / 2 : 0;
-    return { mean, half, n: v.length };
+    const n = v.length;
+    const half = n > 1 ? (Math.max(...v) - Math.min(...v)) / 2 : 0;
+    // sample standard deviation (n − 1) and standard error of the mean
+    const sd = n > 1 ? Math.sqrt(v.reduce((a, b) => a + (b - mean) ** 2, 0) / (n - 1)) : 0;
+    return { mean, half, sd, se: n > 1 ? sd / Math.sqrt(n) : 0, n };
   }
 
   /* ---------- nice axis ticks ---------- */
@@ -994,6 +1009,11 @@ const GR = (() => {
   function axisRange(lo, hi, includeZero, target) {
     if (includeZero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
     if (!(hi > lo)) { const d = Math.abs(lo) * 0.1 || 1; lo -= d; hi += d; }
+    // a little room so points (and their error bars) are not cut in half by the frame;
+    // a zero end stays on the axis
+    const pad = (hi - lo) * 0.025;
+    if (hi !== 0) hi += pad;
+    if (lo !== 0) lo -= pad;
     let step = GM.niceStep(hi - lo, target);
     let a = Math.floor(lo / step + 1e-9) * step, b = Math.ceil(hi / step - 1e-9) * step;
     if (b - a < step) b = a + step;
@@ -1277,7 +1297,7 @@ const GR = (() => {
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const { parseNum, isNum, fmtSF, fmtValUnc, parseUnit, fmtUnit, TRANSFORMS, MODELS } = GM;
   const H = GR.toHTML, P = GR.toPlain;
-  const MAXT = 6, STORE = 'graphlab.v1';
+  const MAXT = 12, STORE = 'graphlab.v1';
 
   /* ---------------- state ---------------- */
   const blankRow = () => ({ x: '', y: Array(MAXT).fill(''), dx: '', dy: '', ex: false });
@@ -1286,7 +1306,7 @@ const GR = (() => {
       v: 1, title: '', showTitle: true,
       x: { name: '', sym: '', unit: '', unc: '', mode: 'abs' },
       y: { name: '', sym: '', unit: '', unc: '', mode: 'abs' },
-      trials: 1, rows: Array.from({ length: 8 }, blankRow), perPoint: false, strict: true,
+      trials: 1, spread: 'range', rows: Array.from({ length: 8 }, blankRow), perPoint: false, strict: true,
       linX: 'none', linY: 'none', fit: 'linear', maxmin: true, residuals: false,
       tool: 'exclude', tanX: '', interpX: '', interpY: '', litVal: '', litQty: '',
       scale: 'auto', axes: { xmin: '', xmax: '', xstep: '', ymin: '', ymax: '', ystep: '' }, origin: true,
@@ -1319,12 +1339,19 @@ const GR = (() => {
       ['x', 'dx', 'dy'].forEach(k => b[k] = String(b[k] ?? '')); b.ex = !!b.ex; return b;
     });
     out.trials = Math.max(1, Math.min(MAXT, out.trials | 0 || 1));
+    if (!SPREAD[out.spread]) out.spread = 'range';
     if (!MODELS[out.fit]) out.fit = 'none';
     if (!TRANSFORMS[out.linX]) out.linX = 'none';
     if (!TRANSFORMS[out.linY]) out.linY = 'none';
     return out;
   }
   let S = defaultState();
+  // How repeated trials become a y error bar.
+  const SPREAD = {
+    range: { short: 'Δ', bar: '± half the range', note: 'Uncertainty in the mean = half the range of the trials, or the instrument uncertainty if that is larger.' },
+    sd: { short: 'SD', bar: '± 1 standard deviation', note: 'Error bars show ± 1 sample standard deviation (n − 1) of the trials.' },
+    se: { short: 'SE', bar: '± 1 standard error', note: 'Error bars show ± 1 standard error of the mean (SD / √n).' },
+  };
 
   /* ---------------- compute ---------------- */
   function axisInfo(q, tid) {
@@ -1391,7 +1418,10 @@ const GR = (() => {
       const x = p.x.value, avg = GM.averageTrials(ys);
       const dxI = p.dx.ok ? Math.abs(p.dx.value) : ux.ok ? (S.x.mode === 'pct' ? Math.abs(x) * ux.value / 100 : Math.abs(ux.value)) : 0;
       const dyI = p.dy.ok ? Math.abs(p.dy.value) : uy.ok ? (S.y.mode === 'pct' ? Math.abs(avg.mean) * uy.value / 100 : Math.abs(uy.value)) : 0;
-      const dy = Math.max(avg.half, dyI);
+      // range: the larger of half-range and instrument uncertainty (IB physics/chemistry convention)
+      // sd / se: the statistic alone (biology convention); a single trial falls back to the instrument value
+      const dy = S.trials < 2 || S.spread === 'range' ? Math.max(avg.half, dyI) : avg.n > 1 ? (S.spread === 'sd' ? avg.sd : avg.se) : dyI;
+      if (S.trials > 1 && S.spread !== 'range' && avg.n === 1) D.infos.push(`Row ${i + 1} has only one trial, so it has no ${S.spread === 'sd' ? 'standard deviation' : 'standard error'}.`);
       const row = { row: i, x, dx: dxI, y: avg.mean, dy, n: avg.n, half: avg.half, ex: S.rows[i].ex, ylsd: GM.mode(p.y.filter(c => c.ok).map(c => c.lsd)), xlsd: p.x.lsd };
       if (!ax.T.ok(x) || !ay.T.ok(avg.mean)) {
         D.infos.push(`Row ${i + 1} cannot be plotted as ${P(!ax.T.ok(x) ? ax.symT : ay.symT)} (${!ax.T.ok(x) ? 'x' : 'y'} = ${fmtSF(!ax.T.ok(x) ? x : avg.mean, 3).replace(/\^\{|\}/g, '')}).`);
@@ -1519,10 +1549,11 @@ const GR = (() => {
     const axN = axisInfo(S.x, 'none'), ayN = axisInfo(S.y, 'none');
     const unitPart = (u) => u ? ` / ${u}` : '';
     const yLabel = (nT > 1 ? `Mean ${ayN.name ? ayN.name.toLowerCase() + ' ' : ''}${ayN.sym}` : `${ayN.prefix}`);
-    cols.push({ h: `${axN.prefix}${unitPart(axN.unitRaw)}`, get: r => fmtValUnc(r.x, r.dx, S.sfU).value, raw: r => r.dx ? null : S.rows[r.row].x });
+    cols.push({ h: `${axN.prefix}${unitPart(axN.unitRaw)}`, get: r => r.dx ? fmtValUnc(r.x, r.dx, S.sfU).value : S.rows[r.row].x.trim().replace(/^-/, '−') });
     cols.push({ h: `Δ${axN.sym}${unitPart(axN.unitRaw)}`, get: r => r.dx ? fmtValUnc(r.x, r.dx, S.sfU).unc : '0' });
     cols.push({ h: `${yLabel}${unitPart(ayN.unitRaw)}`, get: r => r.dy ? fmtValUnc(r.y, r.dy, S.sfU).value : fmtSF(r.y, D.sf) });
-    cols.push({ h: `Δ${ayN.sym}${unitPart(ayN.unitRaw)}`, get: r => r.dy ? fmtValUnc(r.y, r.dy, S.sfU).unc : '0' });
+    const yU = nT > 1 && S.spread !== 'range' ? `${SPREAD[S.spread].short} of ${ayN.sym}` : `Δ${ayN.sym}`;
+    cols.push({ h: `${yU}${unitPart(ayN.unitRaw)}`, get: r => r.dy ? fmtValUnc(r.y, r.dy, S.sfU).unc : '0' });
     if (S.linX !== 'none') {
       cols.push({ h: `${ax.symT}${unitPart(ax.unitMarkup)}`, get: r => r.bad ? '—' : r.dX ? fmtValUnc(r.X, r.dX, S.sfU).value : fmtSF(r.X, D.sf) });
       cols.push({ h: `Δ${GM.wrap(ax.symT)}${unitPart(ax.unitMarkup)}`, get: r => r.bad ? '—' : r.dX ? fmtValUnc(r.X, r.dX, S.sfU).unc : '0' });
@@ -1538,7 +1569,7 @@ const GR = (() => {
     };
     const body = D.rowsOut.map(r => cols.map(c => fmtCell(c, r)));
     const notes = [];
-    if (nT > 1) notes.push(`Uncertainty in the mean = half the range of the trials, or the instrument uncertainty if that is larger.`);
+    if (nT > 1) notes.push(SPREAD[S.spread].note);
     if (D.rowsOut.some(r => r.ex)) notes.push(`Rows marked * are excluded from the fit.`);
     if (S.linX !== 'none' || S.linY !== 'none') notes.push(`Uncertainties in processed values found by the max–min method.`);
     return { head: [cols.map(c => ({ text: c.h }))], body, rows: D.rowsOut, notes };
@@ -1584,6 +1615,7 @@ const GR = (() => {
           else if (bb.vis === 0) out.push(`Uncertainty bars for ${a.symT} are too small to be seen at this scale.`);
           else if (bb.vis + bb.zero < bb.tot) out.push(`Some uncertainty bars for ${a.symT} are too small to be seen at this scale.`);
         };
+        if (!D.blocked && S.trials > 1 && S.spread !== 'range' && D.points.length) out.push(`y error bars show ${SPREAD[S.spread].bar} of ${S.trials} trials.`);
         if (!D.blocked) { one(b.x, D.ax); one(b.y, D.ay); }
         return out;
       },
@@ -1788,6 +1820,7 @@ const GR = (() => {
     $('#exampleTog').checked = !!EX; document.body.classList.toggle('example-on', !!EX);
     for (const ax of ['x', 'y']) $$(`.qcard[data-axis="${ax}"] [data-q]`).forEach(el => el.value = S[ax][el.dataset.q]);
     $('#trials').value = String(S.trials);
+    $('#spread').value = S.spread; $('#spreadField').hidden = S.trials < 2;
     $('#strict').checked = S.strict; $('#perPoint').checked = S.perPoint;
     $('#fit').value = S.fit; $('#maxmin').checked = S.maxmin; $('#residuals').checked = S.residuals;
     $$('.seg button').forEach(b => b.classList.toggle('on', b.dataset.tool === S.tool));
@@ -1809,7 +1842,8 @@ const GR = (() => {
     for (const ax of ['x', 'y']) $$(`.qcard[data-axis="${ax}"] [data-q]`).forEach(el => {
       el.addEventListener('input', () => { S[ax][el.dataset.q] = el.value; if (S.tab === 'raw') refreshHead(); update(); });
     });
-    $('#trials').addEventListener('change', e => { S.trials = +e.target.value; if (S.tab === 'raw') renderRawTable(); update(); });
+    $('#trials').addEventListener('change', e => { S.trials = +e.target.value; $('#spreadField').hidden = S.trials < 2; if (S.tab === 'raw') renderRawTable(); update(); });
+    $('#spread').addEventListener('change', e => { S.spread = e.target.value; update(); });
     $('#strict').addEventListener('change', e => { S.strict = e.target.checked; update(); });
     $('#perPoint').addEventListener('change', e => { S.perPoint = e.target.checked; if (S.tab === 'raw') renderRawTable(); update(); });
     $('#fit').addEventListener('change', e => { S.fit = e.target.value; update(); });

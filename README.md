@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/34068789/README.md)
 # Strothoff Graphical Laboratories
 
 A graphing and data-processing tool for IB Diploma Group 4 sciences (physics, chemistry, biology). Students enter (x, y) data with uncertainties and get a graph ready for a lab report: a best-fit model, R², rigorous max/min lines and properly formatted data tables.
@@ -12,7 +11,12 @@ Created by Christopher B. Slough, Head of Science, Strothoff International Schoo
 
 **Data entry**
 - Quantity, symbol, unit and uncertainty for each axis. Uncertainties can be absolute (± 0.01) or a percentage (± 2 %).
-- 1–6 repeated trials per point. Each point is the mean, and its uncertainty is half the range of the trials or the instrument uncertainty, whichever is larger.
+- 1–12 repeated trials per point. Each point is the mean. Its error bar is one of:
+  - **± half the range**, or the instrument uncertainty if larger (default; the usual IB physics and chemistry convention);
+  - **± 1 standard deviation** of the trials (sample SD, n − 1; the usual biology convention);
+  - **± 1 standard error of the mean** (SD / √n).
+
+  The graph carries a note stating which one is shown, and the processed table heads that column Δ, SD or SE accordingly.
 - Optional per-point uncertainties.
 - Values are stored exactly as typed, so `1.00` stays `1.00`. A decimal comma (`1,23`) is accepted.
 - Columns can be pasted from a spreadsheet. **Enter** and the arrow keys move between cells.
@@ -58,7 +62,7 @@ The whole program is a single self-contained file, `index.html`, with no build s
 2. Connect the repository to Netlify. With no build command, set the publish directory to the repository root.
 3. Netlify serves `index.html` at the site's root URL.
 
-**Link previews (thumbnail on LinkedIn etc.).** Keep `og-image.png` next to `index.html`. In `index.html`, replace every `YOUR-SITE.netlify.app` with the real site address. Link previews need full addresses, not relative ones. After deploying, paste the link into LinkedIn's Post Inspector (linkedin.com/post-inspector) so LinkedIn fetches the new preview.
+**Link previews (thumbnail on LinkedIn etc.).** Keep `og-image.png` next to `index.html`. The preview tags in `index.html` point to https://sisgraphicallaboratory.netlify.app/. If the site moves, update every address in those tags; link previews need full addresses, not relative ones. After deploying, paste the link into LinkedIn's Post Inspector (linkedin.com/post-inspector) so LinkedIn fetches the new preview.
 
 It also runs offline: open `index.html` directly in a browser. The only external request is for the IBM Plex fonts from Google Fonts, and the page falls back to system fonts without them. Exported graphs always use a standard sans-serif so they look the same on every computer.
 
