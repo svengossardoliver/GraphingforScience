@@ -210,6 +210,9 @@ body.example-on .example-tog .ex-note{display:inline}
 body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
 
 .qcard .field.spread{margin-top:6px}
+
+/* placeholders must read as examples, not as filled-in values */
+input::placeholder{color:var(--muted);opacity:.55;font-style:italic}
 </style>
 </head>
 <body>
@@ -238,12 +241,12 @@ body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
     <div class="qcard" data-axis="x">
       <div class="qhead"><b>x-axis</b><span>independent variable</span></div>
       <div class="qgrid">
-        <label class="field"><span>Quantity</span><input data-q="name" placeholder="Length"></label>
-        <label class="field sm"><span>Symbol</span><input data-q="sym" placeholder="L"></label>
-        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="m"></label>
+        <label class="field" title="Axis title: what you measured, in words. Shown on the graph and in the table headings."><span>Axis title (quantity)</span><input data-q="name" placeholder="e.g. Length"></label>
+        <label class="field sm" title="A short symbol such as v or t. Used in equations and units, so keep it to a letter or two."><span>Symbol</span><input data-q="sym" placeholder="e.g. L"></label>
+        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="e.g. m"></label>
       </div>
       <div class="qgrid unc">
-        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="0.002" inputmode="decimal"></label>
+        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="e.g. 0.002" inputmode="decimal"></label>
         <label class="field"><span>as</span><select data-q="mode"><option value="abs">absolute</option><option value="pct">percent</option></select></label>
       </div>
     </div>
@@ -251,12 +254,12 @@ body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
     <div class="qcard" data-axis="y">
       <div class="qhead"><b>y-axis</b><span>dependent variable</span></div>
       <div class="qgrid">
-        <label class="field"><span>Quantity</span><input data-q="name" placeholder="Period"></label>
-        <label class="field sm"><span>Symbol</span><input data-q="sym" placeholder="T"></label>
-        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="s"></label>
+        <label class="field" title="Axis title: what you measured, in words. Shown on the graph and in the table headings."><span>Axis title (quantity)</span><input data-q="name" placeholder="e.g. Period"></label>
+        <label class="field sm" title="A short symbol such as v or t. Used in equations and units, so keep it to a letter or two."><span>Symbol</span><input data-q="sym" placeholder="e.g. T"></label>
+        <label class="field sm"><span>Unit</span><input data-q="unit" placeholder="e.g. s"></label>
       </div>
       <div class="qgrid unc">
-        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="0.01" inputmode="decimal"></label>
+        <label class="field"><span>Uncertainty ±</span><input data-q="unc" placeholder="e.g. 0.01" inputmode="decimal"></label>
         <label class="field"><span>as</span><select data-q="mode"><option value="abs">absolute</option><option value="pct">percent</option></select></label>
         <label class="field"><span>Trials</span><select id="trials"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></label>
       </div>
@@ -405,7 +408,7 @@ body.example-on .data-panel{outline:2px dashed var(--rust);outline-offset:-6px}
     <section>
       <h4>Quick start</h4>
       <ol>
-        <li>Fill in the <b>x-axis</b> and <b>y-axis</b> cards: quantity, symbol, unit and uncertainty.</li>
+        <li>Fill in the <b>x-axis</b> and <b>y-axis</b> cards. <b>Axis title</b> is the quantity in words (e.g. Speed); <b>Symbol</b> is the short letter used in equations (e.g. v). The graph is labelled “Speed v / m s<sup>−1</sup>”. Then add the unit and uncertainty.</li>
         <li>Type your measurements into the table. If you repeated the measurement, set <b>Trials</b> first.</li>
         <li>Choose a <b>Fit</b> above the graph. The equation and R² appear on the graph and under <b>Analysis</b>.</li>
         <li>Export the graph and the tables for your report.</li>
@@ -1363,6 +1366,10 @@ const GR = (() => {
     else { symT = T.sym(sym); prefix = symT; unitT = T.unit(u); }
     return { T, sym, symRaw: sym, symT, prefix, unit: u, unitMarkup: fmtUnit(unitT), unitT, unitRaw: um, name: q.name.trim() };
   }
+  const SYMS = { speed: 'v', velocity: 'v', time: 't', period: 'T', length: 'L', distance: 'd', displacement: 's', height: 'h', mass: 'm', force: 'F', weight: 'W', acceleration: 'a',
+    temperature: 'T', voltage: 'V', potential: 'V', current: 'I', resistance: 'R', frequency: 'f', wavelength: 'λ', energy: 'E', power: 'P', pressure: 'p', volume: 'V', angle: 'θ',
+    radius: 'r', diameter: 'd', area: 'A', density: 'ρ', charge: 'Q', concentration: 'c', rate: 'r', intensity: 'I', width: 'w', count: 'N', number: 'N' };
+  const suggestSym = w => SYMS[w.toLowerCase()] || w[0].toLowerCase();
   const colName = (k) => k === 'x' ? 'x' : k === 'dx' ? 'Δx' : k === 'dy' ? 'Δy' : `trial ${+k.slice(1) + 1}`;
 
   function compute() {
@@ -1370,6 +1377,15 @@ const GR = (() => {
     const ax = axisInfo(S.x, S.linX), ay = axisInfo(S.y, S.linY);
     D.ax = ax; D.ay = ay;
     const ux = parseNum(S.x.unc), uy = parseNum(S.y.unc);
+    for (const [k, q] of [['x', S.x], ['y', S.y]]) {
+      const sym = q.sym.trim();
+      if (sym.length > 3 && /^[A-Za-z]+$/.test(sym))
+        D.infos.push(`“${sym}” is long for ${k === 'x' ? 'an' : 'a'} ${k} symbol: it appears in every equation. Put the word in Axis title and use a short symbol${q.name.trim() ? '' : `, e.g. ${suggestSym(sym)}`}.`);
+      const toks = q.unit.trim().split(/[\s/·*^\-\d]+/).filter(Boolean);
+      const hint = { M: 'M means mega. For metres write m', S: 'S is the siemens. For seconds write s', Kg: 'write kg (lower-case k)', KG: 'write kg', sec: 'write s for seconds', secs: 'write s for seconds', Sec: 'write s for seconds', Hr: 'write h for hours', hr: 'write h for hours', hrs: 'write h for hours', mins: 'write min for minutes' };
+      const bad = toks.find(t => hint[t]);
+      if (bad) D.infos.push(`${k}-axis unit “${q.unit.trim()}”: ${hint[bad]}.`);
+    }
     if (S.x.unc.trim() && !ux.ok) D.issues.push({ msg: `The x uncertainty "${S.x.unc}" is not a number.` });
     if (S.y.unc.trim() && !uy.ok) D.issues.push({ msg: `The y uncertainty "${S.y.unc}" is not a number.` });
     const nT = S.trials;
