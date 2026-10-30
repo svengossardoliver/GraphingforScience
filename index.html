@@ -68,15 +68,31 @@ button.sm{padding:4px 10px;font-size:13px}
 button.wide{width:100%;margin-top:4px}
 
 /* layout */
-.layout{display:grid;gap:16px;padding:16px 24px;grid-template-columns:minmax(360px,410px) minmax(0,1fr) minmax(290px,330px);align-items:start}
-@media (max-width:1400px){ .layout{grid-template-columns:minmax(360px,410px) minmax(0,1fr)} .data-panel{grid-row:span 2} .analysis-panel{grid-column:2} .graph-panel{position:static} }
-@media (max-width:980px){ .data-panel{grid-row:auto} }
-@media (max-width:980px){ .layout{grid-template-columns:minmax(0,1fr);padding:12px} .analysis-panel{grid-column:auto} .top{padding:12px} }
+.layout{display:grid;gap:16px;padding:16px 24px;grid-template-columns:minmax(340px,390px) minmax(0,1fr) minmax(280px,310px);align-items:start}
+/* Layout by screen size. The graph always gets the most room; on screen it is
+   drawn to fill its column and the height left in the window (see screenSize in app.js).
+   ≥1800 px: Data | Graph | Analysis, graph stays in view while scrolling.
+   1180–1799 px (laptops, most monitors): Data | Graph, with Analysis under the graph.
+   <1180 px (tablets): Graph across the full width, Data and Analysis side by side below.
+   <760 px: one column, graph first. */
+.graph-panel{position:sticky;top:12px}
+@media (max-width:1799px){
+  .layout{grid-template-columns:minmax(340px,390px) minmax(0,1fr)}
+  .data-panel{grid-row:span 2} .analysis-panel{grid-column:2} .graph-panel{position:static}
+}
+@media (max-width:1179px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);padding:12px}
+  .graph-panel{grid-column:1/-1;grid-row:1}
+  .data-panel{grid-column:1;grid-row:2} .analysis-panel{grid-column:2;grid-row:2}
+  .top{padding:12px}
+}
+@media (max-width:759px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .data-panel,.analysis-panel{grid-column:auto;grid-row:auto}
+}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:var(--shadow);min-width:0}
 .panel h2{font:600 13px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .panel h2::before{content:"";width:14px;height:2px;background:var(--rust)}
-.graph-panel{position:sticky;top:12px}
-@media (max-width:980px){ .graph-panel{position:static} }
 
 /* fields */
 .field{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -184,22 +200,27 @@ dialog input{width:100%;border:1px solid var(--line);border-radius:6px;padding:8
 @media (max-width:520px){ .qgrid{grid-template-columns:1fr 1fr} .qgrid .field:first-child{grid-column:1/-1} .file button{padding:6px 9px} }
 @media print{ .top,.foot,.data-panel,.analysis-panel,.toolbar,.export-row,.display{display:none} .layout{display:block;padding:0} .panel{border:none;box-shadow:none} body{background:#fff} }
 
-/* help sheet */
-dialog.help{max-width:760px;padding:0;display:flex;flex-direction:column;max-height:88vh}
-dialog.help:not([open]){display:none}
-.help-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px 12px;border-bottom:2px solid var(--ink)}
-.help-head h3{font:600 20px var(--serif);margin:0}
-.help-head p{margin:2px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+/* help sheet (matches the Strothoff labs reference, e.g. Huygens' Rail Yard) */
+dialog.help{max-width:860px;width:calc(100% - 48px);padding:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);max-height:88vh;flex-direction:column}
+dialog.help[open]{display:flex}
+dialog.help::backdrop{background:rgba(5,7,9,.72)}
+.help-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px 12px;border-bottom:2px solid var(--rust)}
+.help-head h3{font:600 22px var(--serif);margin:0}
+.help-head p{margin:2px 0 0;font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--rust)}
+.help-x{background:none;border:1px solid var(--line);border-radius:8px;color:var(--muted);font:600 16px var(--sans);padding:4px 10px;cursor:pointer}
+.help-x:hover{border-color:var(--rust);color:var(--ink)}
 .help-body{overflow:auto;padding:6px 22px 10px;columns:2;column-gap:28px}
-@media (max-width:700px){ .help-body{columns:1} }
+@media (max-width:900px){ .help-body{columns:1} }
 .help-body section{padding:10px 0;border-bottom:1px solid var(--line2);break-inside:avoid;display:inline-block;width:100%}
 .help-body h4{font:600 14px var(--serif);margin:0 0 6px;color:var(--rust)}
-.help-body p,.help-body li{font-size:13px;color:var(--ink2);margin:0 0 6px}
+.help-body p,.help-body li{font-size:13.5px;line-height:1.45;color:var(--ink2);margin:0 0 6px}
 .help-body ol,.help-body ul{margin:0;padding-left:18px}
-.help-t{border-collapse:collapse;font-size:13px;margin-bottom:6px}
+.help-body .mono{font-family:var(--mono);font-size:12.5px}
+.help-t{border-collapse:collapse;font-size:13.5px;margin-bottom:6px}
 .help-t td{padding:2px 12px 2px 0;color:var(--ink2)}
 .help-t td:first-child{font-weight:600;color:var(--ink)}
 .help-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 22px;border-top:1px solid var(--line)}
+.help-foot label{font-size:13.5px;color:var(--muted);display:flex;gap:8px;align-items:center;cursor:pointer}
 .help-credit{margin:0;padding:0 22px 16px;font-size:12px;color:var(--muted)}
 
 /* example toggle */
@@ -401,8 +422,8 @@ input::placeholder{color:var(--muted);opacity:.55;font-style:italic}
 </dialog>
 <dialog id="helpDlg" class="help" aria-labelledby="helpTitle">
   <div class="help-head">
-    <div><h3 id="helpTitle">Strothoff Graphical Laboratories</h3><p>How to use this program</p></div>
-    <button type="button" class="ghost sm" id="btnHelpX" aria-label="Close">✕</button>
+    <div><h3 id="helpTitle">Strothoff Graphical Laboratories</h3><p>How to use this lab</p></div>
+    <button type="button" class="help-x" id="btnHelpX" aria-label="Close">✕</button>
   </div>
   <div class="help-body">
     <section>
@@ -479,9 +500,27 @@ input::placeholder{color:var(--muted);opacity:.55;font-style:italic}
         <li>Download the graph as <b>PNG</b> for a report, or <b>SVG</b> for the sharpest print. <b>Copy image</b> lets you paste it straight into a document.</li>
       </ul>
     </section>
+    <section>
+      <h4>Data from the other Strothoff labs</h4>
+      <p>Labs such as Huygens’ Rail Yard have an <b>Open in SGL</b> button. It opens this program with your data, uncertainties and settings already filled in.</p>
+      <p>Opening one of those links <b>replaces whatever is on screen here</b>. If you are in the middle of another graph, press <b>Save file</b> first.</p>
+    </section>
+    <section>
+      <h4>Conventions</h4>
+      <ul>
+        <li>Table headings take the form <span class="mono">Quantity symbol / unit ± uncertainty</span>, e.g. <span class="mono">Length L / m ± 0.002</span>.</li>
+        <li>Uncertainties are quoted to 1 significant figure (2 if you choose), and each value is rounded to the same decimal place as its uncertainty.</li>
+        <li>Right and up are positive, so left and down are negative. g = −9.81 m s⁻².</li>
+        <li>Gradient uncertainty: Δm = (m<sub>max</sub> − m<sub>min</sub>) / 2.</li>
+      </ul>
+    </section>
+    <section>
+      <h4>Devices</h4>
+      <p>Use a computer, or a tablet in landscape. Phones are not supported. The graph grows to fill the screen, so a bigger window gives a bigger graph. Your work is stored only in this browser on this device: use <b>Save file</b> or <b>Share link</b> to keep it or move it.</p>
+    </section>
   </div>
   <div class="help-foot">
-    <label class="tog"><input type="checkbox" id="helpNever"> Don’t show this when the program starts</label>
+    <label><input type="checkbox" id="helpNever"> Don’t show this when the lab starts</label>
     <button type="button" class="accent" id="btnHelpGo" autofocus>Start graphing</button>
   </div>
   <p class="help-credit">Created by Christopher B. Slough, Head of Science, Strothoff International School. You can open this page again at any time with <b>? Help</b>.</p>
@@ -1049,7 +1088,12 @@ const GR = (() => {
   /* ---------- the graph ---------- */
   // V: view model from app. Returns {svg, geo}
   function graph(V) {
-    const W = 960, fs = 15, tfs = 14;
+    // V.size = {W, plotH}: on screen the app sizes the graph to the space available;
+    // exports use the default 960 × 470 so reports look the same everywhere.
+    const W = (V.size && V.size.W) || 960, fs = 15, tfs = 14;
+    const plotH = Math.round((V.size && V.size.plotH) || 470);
+    const xTarget = Math.max(5, Math.min(14, Math.round((W - 160) / 100)));
+    const yTarget = Math.max(5, Math.min(12, Math.round(plotH / 66)));
     const pts = V.points;
     // data extents
     let xlo = Infinity, xhi = -Infinity, ylo = Infinity, yhi = -Infinity;
@@ -1060,17 +1104,17 @@ const GR = (() => {
     if (!pts.length) { xlo = 0; xhi = 1; ylo = 0; yhi = 1; }
     const ax = V.axes;
     let X, Y;
-    if (ax.manual && ax.xmin < ax.xmax) X = { lo: ax.xmin, hi: ax.xmax, step: ax.xstep > 0 ? ax.xstep : GM.niceStep(ax.xmax - ax.xmin, 8) };
-    else X = axisRange(xlo, xhi, ax.origin, 8);
-    if (ax.manual && ax.ymin < ax.ymax) Y = { lo: ax.ymin, hi: ax.ymax, step: ax.ystep > 0 ? ax.ystep : GM.niceStep(ax.ymax - ax.ymin, 7) };
-    else Y = axisRange(ylo, yhi, ax.origin, 7);
+    if (ax.manual && ax.xmin < ax.xmax) X = { lo: ax.xmin, hi: ax.xmax, step: ax.xstep > 0 ? ax.xstep : GM.niceStep(ax.xmax - ax.xmin, xTarget) };
+    else X = axisRange(xlo, xhi, ax.origin, xTarget);
+    if (ax.manual && ax.ymin < ax.ymax) Y = { lo: ax.ymin, hi: ax.ymax, step: ax.ystep > 0 ? ax.ystep : GM.niceStep(ax.ymax - ax.ymin, yTarget) };
+    else Y = axisRange(ylo, yhi, ax.origin, yTarget);
     const EX = axisScale(X.lo, X.hi), EY = axisScale(Y.lo, Y.hi);
     const xt = ticks(X.lo, X.hi, X.step), yt = ticks(Y.lo, Y.hi, Y.step);
     const ytl = yt.map(v => tickLabel(v, Y.step, EY));
     const ytw = Math.max(...ytl.map(t => measure(t, tfs)), 10);
 
     const mL = 28 + ytw + 16, mR = 30, mT = V.title ? 56 : 26;
-    const plotH = 470, resH = V.residuals && V.fit ? 150 : 0, gapRes = resH ? 64 : 0;
+    const resH = V.residuals && V.fit ? Math.round(Math.max(120, Math.min(220, plotH * 0.3))) : 0, gapRes = resH ? 64 : 0;
     const pw = W - mL - mR;
     const px = x => mL + (x - X.lo) / (X.hi - X.lo) * pw;
     const py = y => mT + plotH - (y - Y.lo) / (Y.hi - Y.lo) * plotH;
@@ -1637,8 +1681,28 @@ const GR = (() => {
       },
     };
   }
+  // Size the on-screen graph to the space it has: the full width of its column and,
+  // where possible, the height left in the window, so the graph dominates on any screen.
+  function screenSize() {
+    const host = $('#graphHost'), panel = $('.graph-panel'), wrap = $('.graph-wrap');
+    const W = Math.max(640, Math.min(2400, Math.floor(host.clientWidth || 960)));
+    const pr = panel.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+    const panelTop = pr.top + window.scrollY, above = wr.top - pr.top;
+    const below = $('.graph-panel > .export-row').offsetHeight + $('#displayBox > summary').offsetHeight + 46;
+    const avail = window.innerHeight - Math.min(panelTop, 120) - above - below - 12;
+    const H = Math.max(Math.max(380, W * 0.42), Math.min(avail, W * 0.8));
+    return { W, H };
+  }
+  function graphAt(D, size) {
+    // first pass at the default plot height, then correct by however far the total missed the target
+    const vm = () => viewModel(D);
+    const r1 = GR.graph(Object.assign(vm(), { size: { W: size.W, plotH: 470 } }));
+    const plotH = Math.max(220, 470 + (size.H - r1.H));
+    return GR.graph(Object.assign(vm(), { size: { W: size.W, plotH } }));
+  }
+  function exportSVG() { return GR.graph(Object.assign(viewModel(LAST || compute()), { size: { W: 960, plotH: 470 } })).svg; }
   function renderGraph(D) {
-    const r = GR.graph(viewModel(D));
+    const r = graphAt(D, screenSize());
     LASTSVG = r.svg; GEO = r.geo;
     $('#graphHost').innerHTML = r.svg;
     // keep manual inputs useful: prefill with the current automatic range
@@ -1981,9 +2045,9 @@ const GR = (() => {
     gh.addEventListener('mouseleave', () => { tip.hidden = true; gh.classList.remove('near'); });
 
     // exports
-    $('#btnPNG').addEventListener('click', () => svgToPng(LASTSVG, 3).then(b => download(b, fileBase() + '.png')).catch(() => toast('Could not make the image.')));
-    $('#btnSVG').addEventListener('click', () => download(new Blob([LASTSVG], { type: 'image/svg+xml' }), fileBase() + '.svg'));
-    $('#btnCopyImg').addEventListener('click', () => copyImage(LASTSVG));
+    $('#btnPNG').addEventListener('click', () => svgToPng(exportSVG(), 3).then(b => download(b, fileBase() + '.png')).catch(() => toast('Could not make the image.')));
+    $('#btnSVG').addEventListener('click', () => download(new Blob([exportSVG()], { type: 'image/svg+xml' }), fileBase() + '.svg'));
+    $('#btnCopyImg').addEventListener('click', () => copyImage(exportSVG()));
     $('#btnCopyTable').addEventListener('click', copyTable);
     $('#btnTableCSV').addEventListener('click', () => { const m = tableModel(); download(new Blob(['﻿' + toCSV(m)], { type: 'text/csv' }), fileBase() + (S.tab === 'raw' ? '-raw-data' : '-processed-data') + '.csv'); });
     $('#btnTablePNG').addEventListener('click', () => { const m = tableModel(); const t = GR.tableSVG(m.head, m.body, m.caption); svgToPng(t.svg, 2).then(b => download(b, fileBase() + (S.tab === 'raw' ? '-raw-data' : '-processed-data') + '.png')); });
@@ -2163,7 +2227,7 @@ const GR = (() => {
   const HELPKEY = 'sgl.hideHelp';
   function openHelp() {
     let hidden = false; try { hidden = localStorage.getItem(HELPKEY) === '1'; } catch (e) { }
-    $('#helpNever').checked = hidden; $('#helpDlg').showModal(); $('.help-body').scrollTop = 0;
+    $('#helpNever').checked = hidden; const d = $('#helpDlg'); if (!d.open) d.showModal(); $('.help-body').scrollTop = 0;
   }
   function bindHelp() {
     const dlg = $('#helpDlg'), close = () => dlg.close();
@@ -2180,7 +2244,16 @@ const GR = (() => {
     S = s || defaultState();
     loadIntoUI();
     let hideHelp = false; try { hideHelp = localStorage.getItem(HELPKEY) === '1'; } catch (e) { }
-    if (!hideHelp) openHelp();
+    const testMode = new URLSearchParams(location.search).get('test') === '1';
+    if (!hideHelp && !testMode && !matchMedia('(max-width:760px)').matches) openHelp();
+    let lastBox = '';
+    const relayout = () => requestAnimationFrame(() => {
+      const box = `${$('#graphHost').clientWidth}x${window.innerHeight}`;
+      if (box !== lastBox && LAST) { lastBox = box; renderGraph(LAST); }
+    });
+    if (window.ResizeObserver) new ResizeObserver(relayout).observe($('#graphHost'));
+    window.addEventListener('resize', relayout);
+    $('#displayBox').addEventListener('toggle', () => { lastBox = ''; relayout(); });
     window.addEventListener('hashchange', async () => { const h = await fromHash(); if (h) { EX = null; S = h; loadIntoUI(); } });
     window.GraphLab = { get state() { return S; }, get last() { return LAST; }, set(s) { EX = null; S = normalise(s); loadIntoUI(); }, example: setExample, shareURL, tableModel, toCSV, toHTMLTable };
   }
