@@ -41,6 +41,7 @@ Created by Christopher B. Slough, Head of Science, Strothoff International Schoo
 - Gradient and intercept quoted IB-style, e.g. `m = (4.0 ± 0.1) s² m⁻¹`, plus the percentage uncertainty.
 - x- and y-intercepts, with uncertainties from the max/min lines. Interpolation: y at a given x, and x at a given y.
 - Comparison with a literature value: percentage difference, and whether the accepted value lies within the experimental uncertainty.
+- **Statistics** on repeated trials: a one-way ANOVA across all rows (with the ANOVA table), or a two-tailed t-test between two rows (Student’s or Welch’s). Each gives the p-value, the critical value at the 5 % level and the decision on H₀. Rows that are excluded from the fit are left out.
 - *Copy results as text* puts the analysis on the clipboard for a report.
 
 **Saving and sharing**
@@ -77,6 +78,8 @@ It also runs offline: open `index.html` directly in a browser. The only external
 **Max/min lines.** Each data point and its uncertainties form an error box. A straight line passes through a box when its value lies between the bottom and top of the box somewhere across the box's width. For a fixed sign of the gradient these conditions are linear in (m, c), so the set of lines that pass through *every* box is a convex polygon. The steepest and shallowest admissible lines are vertices of that polygon, and the program finds them exactly. Then Δm = (m_max − m_min) / 2 and Δc = |c_max − c_min| / 2. If no line passes through all the boxes, the program says so and falls back to the textbook method: lines through opposite corners of the first and last error bars.
 
 **Propagation through linearisation.** For a transformed value f(v) with uncertainty Δv, the uncertainty is |f(v + Δv) − f(v − Δv)| / 2 (the max–min method).
+
+**Statistics.** p-values come from the regularised incomplete beta function (F and t distributions). Critical values are found by bisection on the tail probability. Results match SciPy (`f_oneway`, `ttest_ind`) to at least four significant figures.
 
 **Rounding.** Uncertainties are quoted to 1 significant figure (2 is an option), and values are rounded to the same decimal place. Other results match the significant figures of the data (the most common number of significant figures in each column, from 2 to 6), or a fixed number chosen under *Axes & display*.
 
